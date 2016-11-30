@@ -2,6 +2,7 @@ package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
+import it.serasoft.pdi.model.PDIProcessStep;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +10,9 @@ import org.slf4j.LoggerFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,10 +46,23 @@ public abstract class ParsePDIMetadata {
     protected int depth;
     protected boolean followSymlinks;
 
+    protected List<PDIProcessConnection> connections;
+    protected Map<String, PDIProcessParameterHolder> params;
+    protected Map<String, PDIProcessStep> steps;
+
     public ParsePDIMetadata(File procFileRef, int depth, boolean followSymlinks) {
         this.procFileRef = procFileRef;
         this.depth = depth;
         this.followSymlinks = followSymlinks;
+
+        init();
+    }
+
+    protected void init () {
+
+        connections = new ArrayList<>();
+        params = new HashMap<>();
+        steps = new HashMap<>();
     }
 
     public abstract void parse();
@@ -55,12 +71,23 @@ public abstract class ParsePDIMetadata {
                                File parentPDIProcFile,
                                String callerStepName);
 
+    public List<PDIProcessConnection> getConnections() {
+        return connections;
+    }
 
-    protected Map<String, PDIProcessParameterHolder> parseParameters(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
+    public Map<String, PDIProcessParameterHolder> getParams() {
+        return params;
+    }
+
+    public Map<String, PDIProcessStep> getSteps() {
+        return steps;
+    }
+
+    protected void parseParameters(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
+
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
-        HashMap<String,PDIProcessParameterHolder> valuesMap = new HashMap<>();
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -70,7 +97,7 @@ public abstract class ParsePDIMetadata {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
                         if (elementName.equals("parameter")) {
-                            parseParameter(xmlStreamReader, metadataPath, valuesMap);
+                            parseParameter(xmlStreamReader, metadataPath);
                         }
                         break;
                     case XMLStreamReader.END_ELEMENT:
@@ -87,13 +114,10 @@ public abstract class ParsePDIMetadata {
             e.printStackTrace();
         }
 
-        return valuesMap;
-
     }
 
     protected void parseParameter(XMLStreamReader xmlStreamReader,
-                                  PDIMetadataPath metadataPath,
-                                  HashMap<String, PDIProcessParameterHolder> valuesMap) {
+                                  PDIMetadataPath metadataPath) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -119,6 +143,7 @@ public abstract class ParsePDIMetadata {
                     case XMLStreamReader.END_ELEMENT:
                         metadataPath.pop();
                         elementName = xmlStreamReader.getLocalName();
+                        params.put(paramName, parameterHolder);
                         if (elementName.equals("parameter")) {
                             elementAnalyzed = true;
                         }
@@ -129,8 +154,6 @@ public abstract class ParsePDIMetadata {
             }
         } catch (XMLStreamException e) {
             e.printStackTrace();
-        } finally {
-            valuesMap.put(paramName, parameterHolder);
         }
 
     }

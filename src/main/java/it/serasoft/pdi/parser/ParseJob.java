@@ -98,9 +98,9 @@ public class ParseJob extends ParsePDIMetadata {
                     } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
                         jobExtDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
                     } else if (elementName.equals("parameters") && metadataPath.path().equals("/job/parameters")) {
-                        Map<String, PDIProcessParameterHolder> parms = parseParameters(xmlStreamReader, metadataPath);
-                        if (!parms.isEmpty())
-                            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) parms);
+                        parseParameters(xmlStreamReader, metadataPath);
+                        if (!params.isEmpty())
+                            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
                     } else if (elementName.equals("connection") && metadataPath.path().equals("/job/connection")) {
                         PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
                         if (conn != null)

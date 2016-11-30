@@ -2,6 +2,7 @@ package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
+import it.serasoft.pdi.model.PDIProcessStep;
 import it.serasoft.pdi.utils.ConsoleOutputUtil;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import org.slf4j.Logger;
@@ -59,8 +60,6 @@ public class ParseTransformation extends ParsePDIMetadata {
 
     public void parse(String parentPDIProcName, File parentPDIProcFile, String callerStepName) {
 
-        List<PDIProcessConnection> connections = new ArrayList<>();
-
         try {
             PDIMetadataPath metadataPath = new PDIMetadataPath();
 
@@ -93,9 +92,9 @@ public class ParseTransformation extends ParsePDIMetadata {
                     } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
                         transExtDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
                     } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
-                        Map<String, PDIProcessParameterHolder> parms = parseParameters(xmlStreamReader, metadataPath);
-                        if (!parms.isEmpty())
-                            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) parms);
+                        parseParameters(xmlStreamReader, metadataPath);
+                        if (!params.isEmpty())
+                            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
                     } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
                         PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
                         if (conn != null)
@@ -118,10 +117,9 @@ public class ParseTransformation extends ParsePDIMetadata {
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
-        String type = null;
         String name = null;
-        String description = null;
         String pdiProcFilename = null;
+        PDIProcessStep step = null;
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -134,11 +132,11 @@ public class ParseTransformation extends ParsePDIMetadata {
                             name = readElementText(xmlStreamReader, metadataPath);
                             l.debug("Name: " + name);
                         } else if (elementName.equals("type")) {
-                            type = readElementText(xmlStreamReader, metadataPath);
-                            l.debug("Type: " + type);
+                            step = new PDIProcessStep(name, readElementText(xmlStreamReader, metadataPath));
+                            l.debug("Type: " + step.getType());
                         } else if (elementName.equals("description")) {
-                            description = readElementText(xmlStreamReader, metadataPath);
-                            l.debug("Description: " + description);
+                            step.setDescription(readElementText(xmlStreamReader, metadataPath));
+                            l.debug("Description: " + step.getName());
                         } else if (elementName.equals("filename")) {
                             pdiProcFilename = readElementText(xmlStreamReader, metadataPath);
                             if (pdiProcFilename != null) {
@@ -149,6 +147,8 @@ public class ParseTransformation extends ParsePDIMetadata {
                     case XMLStreamReader.END_ELEMENT:
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
+                        // Each step is identified in the map's keys set by using its name
+                        steps.put(name, step);
                         if (elementName.equals("step"))
                             elementAnalyzed = true;
                         break;

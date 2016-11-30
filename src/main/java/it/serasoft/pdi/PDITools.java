@@ -29,7 +29,6 @@ import java.util.ArrayList;
  *  limitations under the License.
  */
 
-
 /**
  * Class Name   : PDITools.java
  * Package Name : it.serasoft.pdi
@@ -41,9 +40,6 @@ import java.util.ArrayList;
 public class PDITools {
 
 
-    private static final String ACCESS_FOLLOW_LINKS = "FOLLOW-LINKS";
-    private static final String ACCESS_READ_DIR = "READ-DIR";
-
     private static final String TRUE = "true";
     private static final String FALSE = "false";
 
@@ -53,57 +49,34 @@ public class PDITools {
     private static final String EXT_PDI_JOB = ".kjb";
     private static final String EXT_PDI_TRANSFORMATION = ".ktr";
 
+    private static final String FOLLOW_NONE = "none";
+    private static final String FOLLOW_DIR = "directory";
+    private static final String FOLLOW_PROCLINKS = "proc-links";
+
     public static void main(String[] args) throws Exception {
 
         Options opts = new Options();
 
         opts.addOption("report", false, "Generate a report documenting the procedures under analysis");
 
-        opts.addOption("accessStrategy", true, "The strategy used to access the files: FOLLOW-LINKS, READ-DIR");
-        opts.addOption("recurseSubdir", true, "With -accessStrategy:READ-DIR, if true we will recurse subdirectories");
-        opts.addOption("filename", true, "with -accessStrategy:FOLLOW-LINKS, path the \"main\" PDI process");
+        opts.addOption("follow", true, "Values: directory, proc-links, none");
         opts.addOption("outDir", true, "Path to output directory where we will write eventual output files");
         opts.addOption("srcDir", true, "Path to base directory containing the PDI processes source");
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmdLine = parser.parse(opts, args);
 
-        String filename = cmdLine.hasOption("filename") ? cmdLine.getOptionValue("filename") : null;
         String outDir = cmdLine.hasOption("outDir") ? cmdLine.getOptionValue("outDir") : null;
         String srcDir = cmdLine.hasOption("srcDir") ? cmdLine.getOptionValue("srcDir") : null;
-        String accessStrategy = cmdLine.hasOption("accessStrategy") ? cmdLine.getOptionValue("accessStrategy") : null;
-        boolean recurseSubdir = cmdLine.hasOption("recurseSubdir") ? cmdLine.getOptionValue("recurseSubdir").equals(TRUE) : false;
+        String follow = cmdLine.hasOption("follow") ? cmdLine.getOptionValue("follow") : FOLLOW_DIR;
+        // Follow links between procedures only if required and recurseSubdir = false (DEFAULT)
+        boolean recurseDir = follow.equals(FOLLOW_DIR);
+        boolean followLinks = follow.equals(FOLLOW_PROCLINKS);
 
-        if (accessStrategy.equals(ACCESS_FOLLOW_LINKS)) {
-            if (filename == null) {
-                // TODO Manage filename = null with accessStrategy:FOLLOW-LINKS
-                System.exit(-1);
-            }
-
-            startNavigateLynks(filename);
-
-        } else if (accessStrategy.equals(ACCESS_READ_DIR)) {
-            if (srcDir == null) {
-                // TODO Manage filename = null with accessStrategy:READ-DIR
-                System.exit(-2);
-            }
-            startReadingDir(srcDir, recurseSubdir);
-        }
+        startReadingDir(srcDir, recurseDir, followLinks);
     }
 
-    private static void startNavigateLynks(String filename) throws Exception {
-
-        PDITools pdiTools = new PDITools();
-        File f = new File(filename);
-
-        if (f != null) {
-            startAnalysis(f, true);
-        } else {
-            throw new Exception();
-        }
-    }
-
-    private static void startReadingDir(String srcDir, boolean recurse) {
+    private static void startReadingDir(String srcDir, boolean recurse, boolean followLinks) {
 
         File f = new File(srcDir);
 
@@ -115,7 +88,7 @@ public class PDITools {
         getFilesList(f, completeFilesList, recurse);
 
         if (!completeFilesList.isEmpty()) {
-            completeFilesList.forEach(file -> startAnalysis(file, false));
+            completeFilesList.forEach(file -> startAnalysis(file, followLinks));
         }
     }
 
@@ -133,15 +106,15 @@ public class PDITools {
         }
     }
 
-    private static void startAnalysis(File f, boolean followSymlinks) {
+    private static void startAnalysis(File f, boolean followLinks) {
 
         String name = f.getName();
 
         if (name.endsWith(EXT_PDI_JOB)) {
-            ParseJob pje = new ParseJob(f, 0, followSymlinks);
+            ParseJob pje = new ParseJob(f, 0, followLinks);
             pje.parse();
         } else if (name.endsWith(EXT_PDI_TRANSFORMATION)) {
-            ParseTransformation parseTransf = new ParseTransformation(f, 0, followSymlinks);
+            ParseTransformation parseTransf = new ParseTransformation(f, 0, followLinks);
             parseTransf.parse();
         }
     }
