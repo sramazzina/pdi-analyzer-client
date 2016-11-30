@@ -60,8 +60,11 @@ public class ConsoleOutputUtil {
             System.out.println("| Missing References");
             System.out.println("| ============================================");
             missingRefs.forEach(item -> {
+                System.out.println("| |Referencing Proc Name: " + item.getReferencingProcName());
+                System.out.println("| |Referencing Proc Filename: " + item.getReferemcingProcFilename());
+                System.out.println("| |Referencing Step: " + item.getReferencingStepName());
                 item.getAttributesMap().forEach((key, value) -> {
-                    System.out.println("| " + key + " -> " + value);
+                    System.out.println("| |" + key + " -> " + value);
                 });
             });
         }

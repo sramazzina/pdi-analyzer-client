@@ -118,7 +118,10 @@ public class ParseJob extends ParsePDIMetadata {
 
         } catch (FileNotFoundException e1) {
 
-            PDIProcessMissingReferences missingRef = new PDIProcessMissingReferences("JobRef");
+            PDIProcessMissingReferences missingRef = new PDIProcessMissingReferences(callerStepName,
+                            parentPDIProcName,
+                            parentprocFileRef.getAbsolutePath(),
+                            "JobRef");
             missingRef.addAttribute("File Reference:", procFileRef.getAbsoluteFile());
             missingRefs.add(missingRef);
 /*
@@ -171,9 +174,9 @@ public class ParseJob extends ParsePDIMetadata {
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
-        String type = null;
-        String name = null;
-        String description = null;
+        String entryType = null;
+        String entryName = null;
+        String entryDescription = null;
         String procFileRefname = null;
 
         try {
@@ -184,29 +187,29 @@ public class ParseJob extends ParsePDIMetadata {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
                         if (elementName.equals("name")) {
-                            name = readElementText(xmlStreamReader, metadataPath);
-                            l.debug("Name: " + name);
+                            entryName = readElementText(xmlStreamReader, metadataPath);
+                            l.debug("Name: " + entryName);
                         } else if (elementName.equals("type")) {
-                            type = readElementText(xmlStreamReader, metadataPath);
-                            l.debug("Type: " + type);
+                            entryType = readElementText(xmlStreamReader, metadataPath);
+                            l.debug("Type: " + entryType);
                         } else if (elementName.equals("description")) {
-                            description = readElementText(xmlStreamReader, metadataPath);
-                            l.debug("Description: " + description);
+                            entryDescription = readElementText(xmlStreamReader, metadataPath);
+                            l.debug("Description: " + entryDescription);
                         } else if (elementName.equals("filename")) {
                             procFileRefname = readElementText(xmlStreamReader, metadataPath);
                             if (procFileRefname != null) {
                                 procFileRefname = ResolvePDIInternalVariables.internalProcessDirectories(procFileRef.getParent(), procFileRefname);
                                 l.debug("Filename: " + procFileRefname);
-                                if (followSymlinks && type.equals("JOB")) {
+                                if (followSymlinks && entryType.equals("JOB")) {
                                     ParseJob parseJob = new ParseJob(new File(procFileRefname), depth + 1, false);
-                                    parseJob.parse(jobName, procFileRef, name);
+                                    parseJob.parse(this.name, procFileRef, entryName);
                                     if (linkedPDIMetadata == null) {
                                         linkedPDIMetadata = new ArrayList<>();
                                     }
                                     linkedPDIMetadata.add(parseJob);
-                                } else if (followSymlinks && type.equals("TRANS")) {
+                                } else if (followSymlinks && entryType.equals("TRANS")) {
                                     ParseTransformation parseTrans = new ParseTransformation(new File(procFileRefname), depth + 1, false);
-                                    parseTrans.parse(jobName, procFileRef, name);
+                                    parseTrans.parse(this.name, procFileRef, entryName);
                                     if (linkedPDIMetadata == null) {
                                         linkedPDIMetadata = new ArrayList<>();
                                     }

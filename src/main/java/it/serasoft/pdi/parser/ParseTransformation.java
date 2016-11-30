@@ -119,7 +119,7 @@ public class ParseTransformation extends ParsePDIMetadata {
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
-        String name = null;
+        String stepName = null;
         String pdiProcFilename = null;
         PDIProcessFlowItem step = null;
 
@@ -131,10 +131,10 @@ public class ParseTransformation extends ParsePDIMetadata {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
                         if (elementName.equals("name")) {
-                            name = readElementText(xmlStreamReader, metadataPath);
-                            l.debug("Name: " + name);
+                            stepName = readElementText(xmlStreamReader, metadataPath);
+                            l.debug("Name: " + stepName);
                         } else if (elementName.equals("type")) {
-                            step = new PDIProcessFlowItem(name, readElementText(xmlStreamReader, metadataPath));
+                            step = new PDIProcessFlowItem(stepName, readElementText(xmlStreamReader, metadataPath));
                             l.debug("Type: " + step.getType());
                         } else if (elementName.equals("description")) {
                             step.setDescription(readElementText(xmlStreamReader, metadataPath));
@@ -150,7 +150,7 @@ public class ParseTransformation extends ParsePDIMetadata {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
                         // Each step is identified in the map's keys set by using its name
-                        steps.put(name, step);
+                        steps.put(stepName, step);
                         if (elementName.equals("step"))
                             elementAnalyzed = true;
                         break;
