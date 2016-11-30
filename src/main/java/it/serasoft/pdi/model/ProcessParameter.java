@@ -24,17 +24,14 @@ package it.serasoft.pdi.model;
  * Creation Date: 24/11/16
  * Description  :
  */
-public class PDIProcessParameterHolder {
+public class ProcessParameter extends BaseProcessVariable {
 
     private String defaultValue;
     private String description;
 
-    public PDIProcessParameterHolder() {
-    }
+    public ProcessParameter(String name) {
 
-    public PDIProcessParameterHolder(String defaultValue, String description) {
-        this.defaultValue = defaultValue;
-        this.description = description;
+        super(name);
     }
 
     public String getDefaultValue() {

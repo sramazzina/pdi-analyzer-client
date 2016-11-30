@@ -10,7 +10,7 @@ import java.util.HashMap;
  * Creation Date: 30/11/16
  * Description  :
  */
-public class PDIProcessMissingReferences {
+public class ProcessMissingReference {
 
     private String referencingStepName;
     private String referencingProcName;
@@ -18,10 +18,10 @@ public class PDIProcessMissingReferences {
     private String type;
     private HashMap<String, Object> attributes;
 
-    public PDIProcessMissingReferences(String referencingStepName,
-                                       String referencingProcName,
-                                       String referemcingProcFilename,
-                                       String type) {
+    public ProcessMissingReference(String referencingStepName,
+                                   String referencingProcName,
+                                   String referemcingProcFilename,
+                                   String type) {
         this.referencingStepName = referencingStepName;
         this.referencingProcName = referencingProcName;
         this.referemcingProcFilename = referemcingProcFilename;

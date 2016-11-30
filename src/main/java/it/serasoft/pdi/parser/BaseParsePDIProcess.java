@@ -1,9 +1,6 @@
 package it.serasoft.pdi.parser;
 
-import it.serasoft.pdi.model.PDIProcessConnection;
-import it.serasoft.pdi.model.PDIProcessFlowItem;
-import it.serasoft.pdi.model.PDIProcessMissingReferences;
-import it.serasoft.pdi.model.PDIProcessParameterHolder;
+import it.serasoft.pdi.model.*;
 import it.serasoft.pdi.utils.ConsoleOutputUtil;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import org.slf4j.Logger;
@@ -41,7 +38,7 @@ import java.util.Map;
  * Creation Date: 24/11/16
  * Description  :
  */
-public abstract class ParsePDIMetadata {
+public abstract class BaseParsePDIProcess {
 
     private Logger l = LoggerFactory.getLogger(ParseJob.class);
     protected File procFileRef;
@@ -52,13 +49,14 @@ public abstract class ParsePDIMetadata {
     protected String desc;
     protected String extDesc;
 
-    protected List<PDIProcessConnection> connections;
-    protected Map<String, PDIProcessParameterHolder> params;
-    protected Map<String, PDIProcessFlowItem> steps;
-    protected List<ParsePDIMetadata> linkedPDIMetadata;
-    protected List<PDIProcessMissingReferences> missingRefs;
+    protected List<ProcessConnection> connections;
+    protected Map<String, ProcessParameter> params;
+    protected Map<String, ProcessStep> steps;
+    protected List<BaseParsePDIProcess> linkedPDIMetadata;
+    protected List<ProcessMissingReference> missingRefs;
+    protected List<ProcessVariable> vars;
 
-    public ParsePDIMetadata(File procFileRef, int depth, boolean followSymlinks) {
+    public BaseParsePDIProcess(File procFileRef, int depth, boolean followSymlinks) {
 
         this.procFileRef = procFileRef;
         this.depth = depth;
@@ -72,6 +70,7 @@ public abstract class ParsePDIMetadata {
         params = new HashMap<>();
         steps = new HashMap<>();
         missingRefs = new ArrayList<>();
+        vars = new ArrayList<>();
     }
 
     public abstract void parse();
@@ -80,19 +79,19 @@ public abstract class ParsePDIMetadata {
                                File parentPDIProcFile,
                                String callerStepName);
 
-    public List<PDIProcessConnection> getConnections() {
+    public List<ProcessConnection> getConnections() {
         return connections;
     }
 
-    public Map<String, PDIProcessParameterHolder> getParams() {
+    public Map<String, ProcessParameter> getParams() {
         return params;
     }
 
-    public Map<String, PDIProcessFlowItem> getSteps() {
+    public Map<String, ProcessStep> getSteps() {
         return steps;
     }
 
-    public List<PDIProcessMissingReferences> getMissingRefs() {
+    public List<ProcessMissingReference> getMissingRefs() {
         return missingRefs;
     }
 
@@ -137,7 +136,7 @@ public abstract class ParsePDIMetadata {
         String elementName = null;
         String paramName = null;
 
-        PDIProcessParameterHolder parameterHolder = new PDIProcessParameterHolder();
+        ProcessParameter parameterHolder = null;
         try {
             while (xmlStreamReader.hasNext()) {
                 eventType = xmlStreamReader.next();
@@ -148,7 +147,7 @@ public abstract class ParsePDIMetadata {
                         if (elementName.equals("default_value")) {
                             parameterHolder.setDefaultValue(readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("name")) {
-                            paramName = readElementText(xmlStreamReader, metadataPath);
+                            parameterHolder = new ProcessParameter(readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("description")) {
                             parameterHolder.setDescription(readElementText(xmlStreamReader, metadataPath));
                         }
@@ -172,13 +171,13 @@ public abstract class ParsePDIMetadata {
     }
 
 
-    protected PDIProcessConnection parseConnection(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
+    protected ProcessConnection parseConnection(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
         String elementValue = null;
-        PDIProcessConnection retConn = null;
+        ProcessConnection retConn = null;
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -192,7 +191,7 @@ public abstract class ParsePDIMetadata {
                         } else {
                             elementValue = readElementText(xmlStreamReader, metadataPath);
                             if (elementName.equals("name")) {
-                                retConn = new PDIProcessConnection(elementValue, procFileRef);
+                                retConn = new ProcessConnection(elementValue, procFileRef);
                             } else {
                                 retConn.getProperties().put(elementName, elementValue);
                             }
@@ -218,7 +217,7 @@ public abstract class ParsePDIMetadata {
 
     private void parseConnectionAttributes(XMLStreamReader xmlStreamReader,
                                            PDIMetadataPath metadataPath,
-                                           PDIProcessConnection valuesMap) {
+                                           ProcessConnection valuesMap) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -253,7 +252,7 @@ public abstract class ParsePDIMetadata {
 
     protected void parseConnectionAttribute(XMLStreamReader xmlStreamReader,
                                             PDIMetadataPath metadataPath,
-                                            PDIProcessConnection valuesMap) {
+                                            ProcessConnection valuesMap) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -353,7 +352,9 @@ public abstract class ParsePDIMetadata {
     public void printReport() {
 
         if (params != null && !params.isEmpty())
-            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
+            ConsoleOutputUtil.printParameters((HashMap<String, ProcessParameter>) params);
+        if (vars != null && !vars.isEmpty())
+            ConsoleOutputUtil.printVariables(vars);
         if (connections != null && !connections.isEmpty())
             ConsoleOutputUtil.printConnections(connections);
         if (linkedPDIMetadata != null && !linkedPDIMetadata.isEmpty()) {

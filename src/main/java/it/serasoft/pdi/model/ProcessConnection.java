@@ -27,14 +27,14 @@ import java.util.HashMap;
  * Creation Date: 25/11/16
  * Description  :
  */
-public class PDIProcessConnection {
+public class ProcessConnection {
 
     private String name;
     private File pdiProcFile;
     private HashMap<String, String> properties = new HashMap<>();
     private HashMap<String, String> jdbcAttributes = new HashMap<>();
 
-    public PDIProcessConnection(String name, File pdiProcFile) {
+    public ProcessConnection(String name, File pdiProcFile) {
         this.name = name;
         this.pdiProcFile = pdiProcFile;
     }

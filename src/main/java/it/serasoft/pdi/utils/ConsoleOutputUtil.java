@@ -1,8 +1,9 @@
 package it.serasoft.pdi.utils;
 
-import it.serasoft.pdi.model.PDIProcessConnection;
-import it.serasoft.pdi.model.PDIProcessMissingReferences;
-import it.serasoft.pdi.model.PDIProcessParameterHolder;
+import it.serasoft.pdi.model.ProcessConnection;
+import it.serasoft.pdi.model.ProcessMissingReference;
+import it.serasoft.pdi.model.ProcessParameter;
+import it.serasoft.pdi.model.ProcessVariable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ import java.util.List;
  */
 public class ConsoleOutputUtil {
 
-    public static void printParameters(HashMap<String, PDIProcessParameterHolder> parms) {
+    public static void printParameters(HashMap<String, ProcessParameter> parms) {
 
         System.out.println("| Parameters");
         System.out.println("| ============================================");
@@ -43,7 +44,16 @@ public class ConsoleOutputUtil {
         });
     }
 
-    public static void printConnections(List<PDIProcessConnection> conns) {
+    public static void printVariables(List<ProcessVariable> vars) {
+
+        System.out.println("| Variables");
+        System.out.println("| ============================================");
+        vars.forEach((item) -> {
+            System.out.println("| | Name: " + item.getName() + " - Scope: " + item.getScope() + " - Step: " + item.getStepName());
+        });
+    }
+
+    public static void printConnections(List<ProcessConnection> conns) {
         System.out.println("| Connections");
         System.out.println("| ============================================");
         conns.forEach(item -> {
@@ -54,7 +64,7 @@ public class ConsoleOutputUtil {
         });
     }
 
-    public static void printMissingReferences(List<PDIProcessMissingReferences> missingRefs) {
+    public static void printMissingReferences(List<ProcessMissingReference> missingRefs) {
 
         if (!missingRefs.isEmpty()) {
             System.out.println("| Missing References");

@@ -1,9 +1,8 @@
 package it.serasoft.pdi.parser;
 
-import it.serasoft.pdi.model.PDIProcessConnection;
-import it.serasoft.pdi.model.PDIProcessParameterHolder;
-import it.serasoft.pdi.model.PDIProcessFlowItem;
-import it.serasoft.pdi.utils.ConsoleOutputUtil;
+import it.serasoft.pdi.model.ProcessConnection;
+import it.serasoft.pdi.model.ProcessStep;
+import it.serasoft.pdi.model.ProcessVariable;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,8 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
@@ -42,7 +42,7 @@ import java.util.*;
  * Description  :
  */
 
-public class ParseTransformation extends ParsePDIMetadata {
+public class ParseTransformation extends BaseParsePDIProcess {
 
     private Logger l = LoggerFactory.getLogger(ParseTransformation.class);
 
@@ -89,7 +89,7 @@ public class ParseTransformation extends ParsePDIMetadata {
                         } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
                             parseParameters(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
-                            PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
+                            ProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
 
                             if (conn != null) {
                                 connections.add(conn);
@@ -121,7 +121,7 @@ public class ParseTransformation extends ParsePDIMetadata {
         String elementName = null;
         String stepName = null;
         String pdiProcFilename = null;
-        PDIProcessFlowItem step = null;
+        ProcessStep step = null;
 
         try {
             while (xmlStreamReader.hasNext() && !elementAnalyzed) {
@@ -134,8 +134,11 @@ public class ParseTransformation extends ParsePDIMetadata {
                             stepName = readElementText(xmlStreamReader, metadataPath);
                             l.debug("Name: " + stepName);
                         } else if (elementName.equals("type")) {
-                            step = new PDIProcessFlowItem(stepName, readElementText(xmlStreamReader, metadataPath));
+                            step = new ProcessStep(stepName, readElementText(xmlStreamReader, metadataPath));
                             l.debug("Type: " + step.getType());
+                            if (step.getType().equals("SetVariable")) {
+                                extractVariablesDefinition(stepName, xmlStreamReader, metadataPath);
+                            }
                         } else if (elementName.equals("description")) {
                             step.setDescription(readElementText(xmlStreamReader, metadataPath));
                             l.debug("Description: " + step.getName());
@@ -161,6 +164,43 @@ public class ParseTransformation extends ParsePDIMetadata {
         }
 
 
+    }
+
+    private void extractVariablesDefinition(String stepName, XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
+
+        int eventType = 0;
+        boolean elementAnalyzed = false;
+        String elementName = null;
+        ProcessVariable var = null;
+
+        try {
+            while (xmlStreamReader.hasNext()) {
+                eventType = xmlStreamReader.next();
+                switch (eventType) {
+                    case XMLStreamReader.START_ELEMENT:
+                        elementName = xmlStreamReader.getLocalName();
+                        metadataPath.push(elementName);
+                        if (elementName.equals("variable_name")) {
+                            var = new ProcessVariable(stepName, readElementText(xmlStreamReader, metadataPath));
+                        } else if (elementName.equals("variable_type")) {
+                            var.setScope(readElementText(xmlStreamReader, metadataPath));
+                        }
+                        break;
+                    case XMLStreamReader.END_ELEMENT:
+                        elementName = xmlStreamReader.getLocalName();
+                        metadataPath.pop();
+                        if (elementName.equals("fields"))
+                            elementAnalyzed = true;
+                        else if (elementName.equals("field"))
+                            vars.add(var);
+                        break;
+                }
+
+                if (elementAnalyzed) break;
+            }
+        } catch (XMLStreamException e) {
+            e.printStackTrace();
+        }
     }
 
 }

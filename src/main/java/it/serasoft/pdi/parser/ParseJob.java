@@ -1,9 +1,7 @@
 package it.serasoft.pdi.parser;
 
-import it.serasoft.pdi.model.PDIProcessConnection;
-import it.serasoft.pdi.model.PDIProcessMissingReferences;
-import it.serasoft.pdi.model.PDIProcessParameterHolder;
-import it.serasoft.pdi.utils.ConsoleOutputUtil;
+import it.serasoft.pdi.model.ProcessConnection;
+import it.serasoft.pdi.model.ProcessMissingReference;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import it.serasoft.pdi.utils.ResolvePDIInternalVariables;
 import org.slf4j.Logger;
@@ -17,9 +15,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -47,7 +42,7 @@ import java.util.Map;
  * Creation Date: 24/11/16
  * Description  :
  */
-public class ParseJob extends ParsePDIMetadata {
+public class ParseJob extends BaseParsePDIProcess {
 
     private Logger l = LoggerFactory.getLogger(ParseJob.class);
 
@@ -97,7 +92,7 @@ public class ParseJob extends ParsePDIMetadata {
                         } else if (elementName.equals("parameters") && metadataPath.path().equals("/job/parameters")) {
                             parseParameters(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("connection") && metadataPath.path().equals("/job/connection")) {
-                            PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
+                            ProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
                             if (connections == null)
                                 connections = new ArrayList<>();
                             if (conn != null) {
@@ -118,7 +113,7 @@ public class ParseJob extends ParsePDIMetadata {
 
         } catch (FileNotFoundException e1) {
 
-            PDIProcessMissingReferences missingRef = new PDIProcessMissingReferences(callerStepName,
+            ProcessMissingReference missingRef = new ProcessMissingReference(callerStepName,
                             parentPDIProcName,
                             parentprocFileRef.getAbsolutePath(),
                             "JobRef");
