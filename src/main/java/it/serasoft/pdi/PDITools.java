@@ -44,7 +44,7 @@ public class PDITools {
     private static final String FALSE = "false";
 
 
-    private Logger l = LoggerFactory.getLogger(PDITools.class);
+    private static Logger l = LoggerFactory.getLogger(PDITools.class);
 
     private static final String EXT_PDI_JOB = ".kjb";
     private static final String EXT_PDI_TRANSFORMATION = ".ktr";

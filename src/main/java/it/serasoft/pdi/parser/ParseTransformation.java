@@ -2,7 +2,7 @@ package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
-import it.serasoft.pdi.model.PDIProcessStep;
+import it.serasoft.pdi.model.PDIProcessFlowItem;
 import it.serasoft.pdi.utils.ConsoleOutputUtil;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import org.slf4j.Logger;
@@ -46,10 +46,6 @@ public class ParseTransformation extends ParsePDIMetadata {
 
     private Logger l = LoggerFactory.getLogger(ParseTransformation.class);
 
-    private String transName;
-    private String transDesc;
-    private String transExtDesc;
-
     public ParseTransformation(File transFile, int depth, boolean followSymlinks) {
         super(transFile, depth, followSymlinks);
     }
@@ -66,43 +62,49 @@ public class ParseTransformation extends ParsePDIMetadata {
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
             String prevElementName = "";
             String elementName = null;
+            int eventType = 0;
 
             while (xmlStreamReader.hasNext()) {
-                int eventCode = xmlStreamReader.next();
 
-                if (XMLStreamConstants.START_ELEMENT == eventCode) {
-                    elementName = xmlStreamReader.getLocalName();
-                    metadataPath.push(elementName);
+                eventType = xmlStreamReader.next();
+                switch (eventType) {
+                    case XMLStreamReader.START_ELEMENT:
+                        metadataPath.push(elementName);
+                        elementName = xmlStreamReader.getLocalName();
 
-                    if (prevElementName.equals("connection") && !prevElementName.equals(elementName) && metadataPath.depth() == 2)
-                        ConsoleOutputUtil.printConnections(connections);
+                        if (elementName.equals("step")) {
+                            parseStep(xmlStreamReader, metadataPath);
+                        } else if (elementName.equals("name") && prevElementName.equals("info")) {
+                            name = parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath);
+                            System.out.println("Analyzing transformation metadata - File: " + name
+                                    + "\n| Filename: " + procFileRef.getName()
+                                    + "\n| Path: " + procFileRef.getParent()
+                                    + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
+                                    + (parentPDIProcFile != null ? "\n| Caller Filename: " + parentPDIProcFile.getName() : "")
+                                    + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
+                        } else if (elementName.equals("description") && metadataPath.path().equals("/job/description")) {
+                            desc = parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath);
+                        } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
+                            extDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
+                        } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
+                            parseParameters(xmlStreamReader, metadataPath);
+                        } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
+                            PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
 
-                    if (elementName.equals("step")) {
-                        parseStep(xmlStreamReader, metadataPath);
-                    } else if (elementName.equals("name") && prevElementName.equals("info")) {
-                        String transName = parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath);
-                        System.out.println("Analyzing transformation metadata - File: " + transName
-                                + "\n| Filename: " + procFileRef.getName()
-                                + "\n| Path: " + procFileRef.getParent()
-                                + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
-                                + (parentPDIProcFile != null ? "\n| Caller Filename: " + parentPDIProcFile.getName() : "")
-                                + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
-                    } else if (elementName.equals("description") && metadataPath.path().equals("/job/description")) {
-                        transDesc = parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath);
-                    } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
-                        transExtDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
-                    } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
-                        parseParameters(xmlStreamReader, metadataPath);
-                        if (!params.isEmpty())
-                            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
-                    } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
-                        PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
-                        if (conn != null)
-                            connections.add(conn);
-                    }
-                    prevElementName = elementName;
-                } else if (XMLStreamConstants.END_ELEMENT == eventCode) {
-                    metadataPath.pop();
+                            if (conn != null) {
+                                connections.add(conn);
+                            }
+                        }
+                        prevElementName = elementName;
+                        break;
+
+                    case XMLStreamConstants.END_ELEMENT:
+                        elementName = xmlStreamReader.getLocalName();
+                        metadataPath.pop();
+                        if(elementName.equals("transformation")) {
+                            printReport();
+                        }
+                        break;
                 }
             }
         } catch (FileNotFoundException e1) {
@@ -119,10 +121,10 @@ public class ParseTransformation extends ParsePDIMetadata {
         String elementName = null;
         String name = null;
         String pdiProcFilename = null;
-        PDIProcessStep step = null;
+        PDIProcessFlowItem step = null;
 
         try {
-            while (xmlStreamReader.hasNext()) {
+            while (xmlStreamReader.hasNext() && !elementAnalyzed) {
                 eventType = xmlStreamReader.next();
                 switch (eventType) {
                     case XMLStreamReader.START_ELEMENT:
@@ -132,7 +134,7 @@ public class ParseTransformation extends ParsePDIMetadata {
                             name = readElementText(xmlStreamReader, metadataPath);
                             l.debug("Name: " + name);
                         } else if (elementName.equals("type")) {
-                            step = new PDIProcessStep(name, readElementText(xmlStreamReader, metadataPath));
+                            step = new PDIProcessFlowItem(name, readElementText(xmlStreamReader, metadataPath));
                             l.debug("Type: " + step.getType());
                         } else if (elementName.equals("description")) {
                             step.setDescription(readElementText(xmlStreamReader, metadataPath));
@@ -153,8 +155,6 @@ public class ParseTransformation extends ParsePDIMetadata {
                             elementAnalyzed = true;
                         break;
                 }
-
-                if (elementAnalyzed) break;
             }
         } catch (XMLStreamException e) {
             e.printStackTrace();

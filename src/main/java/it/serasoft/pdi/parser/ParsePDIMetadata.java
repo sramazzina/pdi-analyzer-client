@@ -1,8 +1,9 @@
 package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
+import it.serasoft.pdi.model.PDIProcessFlowItem;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
-import it.serasoft.pdi.model.PDIProcessStep;
+import it.serasoft.pdi.utils.ConsoleOutputUtil;
 import it.serasoft.pdi.utils.PDIMetadataPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,19 +17,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -46,19 +47,24 @@ public abstract class ParsePDIMetadata {
     protected int depth;
     protected boolean followSymlinks;
 
+    protected String name;
+    protected String desc;
+    protected String extDesc;
+
     protected List<PDIProcessConnection> connections;
     protected Map<String, PDIProcessParameterHolder> params;
-    protected Map<String, PDIProcessStep> steps;
+    protected Map<String, PDIProcessFlowItem> steps;
+    protected List<ParsePDIMetadata> linkedPDIMetadata;
 
     public ParsePDIMetadata(File procFileRef, int depth, boolean followSymlinks) {
+
         this.procFileRef = procFileRef;
         this.depth = depth;
         this.followSymlinks = followSymlinks;
-
         init();
     }
 
-    protected void init () {
+    protected void init() {
 
         connections = new ArrayList<>();
         params = new HashMap<>();
@@ -79,7 +85,7 @@ public abstract class ParsePDIMetadata {
         return params;
     }
 
-    public Map<String, PDIProcessStep> getSteps() {
+    public Map<String, PDIProcessFlowItem> getSteps() {
         return steps;
     }
 
@@ -278,14 +284,14 @@ public abstract class ParsePDIMetadata {
 
     protected String parseSimpleTextElementByName(XMLStreamReader xmlStreamReader,
                                                   String elementName,
-                                                  PDIMetadataPath metadataPath){
+                                                  PDIMetadataPath metadataPath) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
         String rValue = null;
 
         rValue = readElementText(xmlStreamReader, metadataPath);
-        l.debug( elementName + ": " + rValue);
+        l.debug(elementName + ": " + rValue);
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -337,4 +343,13 @@ public abstract class ParsePDIMetadata {
         return content.toString();
     }
 
+    public void printReport() {
+
+        if (params != null && !params.isEmpty())
+            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
+        if (connections != null && !connections.isEmpty())
+            ConsoleOutputUtil.printConnections(connections);
+
+
+    }
 }

@@ -1,6 +1,8 @@
 package it.serasoft.pdi.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Class Name   : PDIProcessStep.java
@@ -10,17 +12,28 @@ import java.util.HashMap;
  * Creation Date: 27/11/16
  * Description  :
  */
-public class PDIProcessStep {
+public class PDIProcessFlowItem {
 
     private String name;
     private String description;
     private String type;
+    private List<PDIProcessFlowItem> goesTo;
+    private List<PDIProcessFlowItem> comesFrom;
+
 
     private HashMap<String, String> attributes = new HashMap<>();
 
-    public PDIProcessStep(String name, String type) {
+    public PDIProcessFlowItem(String name, String type) {
         this.name = name;
         this.type = type;
+    }
+
+    public void addGoesToItem(PDIProcessFlowItem item) {
+
+        if (goesTo == null)
+            goesTo = new ArrayList<>();
+
+        goesTo.add(item);
     }
 
     public String getName() {

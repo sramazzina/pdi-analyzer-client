@@ -64,51 +64,54 @@ public class ParseJob extends ParsePDIMetadata {
 
     public void parse(String parentPDIProcName, File parentprocFileRef, String callerStepName) {
 
-        List<PDIProcessConnection> connections = new ArrayList<>();
-
         try {
             PDIMetadataPath metadataPath = new PDIMetadataPath();
 
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
-            String prevElementName = "";
             String elementName = null;
+            int eventType = 0;
 
             while (xmlStreamReader.hasNext()) {
 
-                int eventCode = xmlStreamReader.next();
-                if (XMLStreamConstants.START_ELEMENT == eventCode) {
-                    elementName = xmlStreamReader.getLocalName();
-                    metadataPath.push(elementName);
+                eventType = xmlStreamReader.next();
+                switch (eventType) {
+                    case XMLStreamReader.START_ELEMENT:
+                        elementName = xmlStreamReader.getLocalName();
+                        metadataPath.push(elementName);
 
-                    if (prevElementName.equals("connection") && !prevElementName.equals(elementName) && metadataPath.depth() == 2)
-                        ConsoleOutputUtil.printConnections(connections);
+                        if (elementName.equals("entries")) {
+                            parseEntries(xmlStreamReader, metadataPath);
+                        } else if (elementName.equals("name") && metadataPath.path().equals("/job/name")) {
+                            name = parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath);
+                            System.out.println("Analyzing job metadata - File: " + name
+                                    + "\n| Filename: " + procFileRef.getName()
+                                    + "\n| Path: " + procFileRef.getParent()
+                                    + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
+                                    + (parentprocFileRef != null ? "\n| Caller Filename: " + parentprocFileRef.getName() : "")
+                                    + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
+                        } else if (elementName.equals("description") && metadataPath.path().equals("/job/description")) {
+                            desc = parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath);
+                        } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
+                            extDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
+                        } else if (elementName.equals("parameters") && metadataPath.path().equals("/job/parameters")) {
+                            parseParameters(xmlStreamReader, metadataPath);
+                        } else if (elementName.equals("connection") && metadataPath.path().equals("/job/connection")) {
+                            PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
+                            if (connections == null)
+                                connections = new ArrayList<>();
+                            if (conn != null) {
+                                connections.add(conn);
+                            }
+                        }
+                        break;
 
-                    if (elementName.equals("entries")) {
-                        parseEntries(xmlStreamReader, metadataPath);
-                    } else if (elementName.equals("name") && metadataPath.path().equals("/job/name")) {
-                        jobName = parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath);
-                        System.out.println("Analyzing job metadata - File: " + jobName
-                                + "\n| Filename: " + procFileRef.getName()
-                                + "\n| Path: " + procFileRef.getParent()
-                                + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
-                                + (parentprocFileRef != null ? "\n| Caller Filename: " + parentprocFileRef.getName() : "")
-                                + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
-                    } else if (elementName.equals("description") && metadataPath.path().equals("/job/description")) {
-                        jobDesc = parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath);
-                    } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
-                        jobExtDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
-                    } else if (elementName.equals("parameters") && metadataPath.path().equals("/job/parameters")) {
-                        parseParameters(xmlStreamReader, metadataPath);
-                        if (!params.isEmpty())
-                            ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
-                    } else if (elementName.equals("connection") && metadataPath.path().equals("/job/connection")) {
-                        PDIProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
-                        if (conn != null)
-                            connections.add(conn);
-                    }
-                    prevElementName = elementName;
-                } else if (XMLStreamConstants.END_ELEMENT == eventCode) {
-                    metadataPath.pop();
+                    case XMLStreamConstants.END_ELEMENT:
+                        elementName = xmlStreamReader.getLocalName();
+                        metadataPath.pop();
+                        if(elementName.equals("job")) {
+                            printReport();
+                        }
+                        break;
                 }
             }
 
@@ -120,6 +123,8 @@ public class ParseJob extends ParsePDIMetadata {
 
         } catch (XMLStreamException e2) {
             l.error(e2.getLocalizedMessage());
+        } catch (Exception e) {
+            l.error(e.getMessage());
         }
     }
 
@@ -130,7 +135,7 @@ public class ParseJob extends ParsePDIMetadata {
         String elementName = null;
 
         try {
-            while (xmlStreamReader.hasNext()) {
+            while (xmlStreamReader.hasNext() && !elementAnalyzed) {
                 eventType = xmlStreamReader.next();
                 switch (eventType) {
                     case XMLStreamReader.START_ELEMENT:
@@ -141,13 +146,13 @@ public class ParseJob extends ParsePDIMetadata {
                         }
                         break;
                     case XMLStreamReader.END_ELEMENT:
+                        elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
                         if (elementName.equals("entries"))
                             elementAnalyzed = true;
                         break;
                 }
 
-                if (elementAnalyzed) break;
             }
         } catch (XMLStreamException e) {
             e.printStackTrace();
@@ -166,7 +171,7 @@ public class ParseJob extends ParsePDIMetadata {
         String procFileRefname = null;
 
         try {
-            while (xmlStreamReader.hasNext()) {
+            while (xmlStreamReader.hasNext() && !elementAnalyzed) {
                 eventType = xmlStreamReader.next();
                 switch (eventType) {
                     case XMLStreamReader.START_ELEMENT:
@@ -189,9 +194,17 @@ public class ParseJob extends ParsePDIMetadata {
                                 if (followSymlinks && type.equals("JOB")) {
                                     ParseJob parseJob = new ParseJob(new File(procFileRefname), depth + 1, false);
                                     parseJob.parse(jobName, procFileRef, name);
+                                    if (linkedPDIMetadata == null) {
+                                        linkedPDIMetadata = new ArrayList<>();
+                                    }
+                                    linkedPDIMetadata.add(parseJob);
                                 } else if (followSymlinks && type.equals("TRANS")) {
                                     ParseTransformation parseTrans = new ParseTransformation(new File(procFileRefname), depth + 1, false);
                                     parseTrans.parse(jobName, procFileRef, name);
+                                    if (linkedPDIMetadata == null) {
+                                        linkedPDIMetadata = new ArrayList<>();
+                                    }
+                                    linkedPDIMetadata.add(parseTrans);
                                 }
                             }
                         }
@@ -203,8 +216,6 @@ public class ParseJob extends ParsePDIMetadata {
                             elementAnalyzed = true;
                         break;
                 }
-
-                if (elementAnalyzed) break;
             }
         } catch (XMLStreamException e) {
             e.printStackTrace();
