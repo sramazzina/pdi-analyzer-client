@@ -51,7 +51,7 @@ public class PDITools {
 
     private static final String FOLLOW_NONE = "none";
     private static final String FOLLOW_DIR = "directory";
-    private static final String FOLLOW_PROCLINKS = "proc-links";
+    private static final String FOLLOW_PROCLINKS = "links";
 
     public static void main(String[] args) throws Exception {
 
@@ -59,7 +59,7 @@ public class PDITools {
 
         opts.addOption("report", false, "Generate a report documenting the procedures under analysis");
 
-        opts.addOption("follow", true, "Values: directory, proc-links, none");
+        opts.addOption("follow", true, "Values: directory, links, none");
         opts.addOption("outDir", true, "Path to output directory where we will write eventual output files");
         opts.addOption("srcDir", true, "Path to base directory containing the PDI processes source");
 

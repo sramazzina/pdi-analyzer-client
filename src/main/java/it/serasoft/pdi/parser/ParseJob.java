@@ -1,6 +1,7 @@
 package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
+import it.serasoft.pdi.model.PDIProcessMissingReferences;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
 import it.serasoft.pdi.utils.ConsoleOutputUtil;
 import it.serasoft.pdi.utils.PDIMetadataPath;
@@ -116,11 +117,16 @@ public class ParseJob extends ParsePDIMetadata {
             }
 
         } catch (FileNotFoundException e1) {
-            System.out.println("| WARNING - File " + procFileRef + " was not found as expected by PDI analyzer. Please check!"
+
+            PDIProcessMissingReferences missingRef = new PDIProcessMissingReferences("JobRef");
+            missingRef.addAttribute("File Reference:", procFileRef.getAbsoluteFile());
+            missingRefs.add(missingRef);
+/*
+            l.error("| WARNING - File " + procFileRef + " was not found as expected by PDI analyzer. Please check!"
                     + (parentPDIProcName != null ? "\n| | Caller: " + parentPDIProcName : "")
                     + (parentprocFileRef != null ? "\n| | Caller Filename: " + parentprocFileRef.getName() : "")
                     + (callerStepName != null ? "\n| | Caller Step: " + callerStepName : ""));
-
+*/
         } catch (XMLStreamException e2) {
             l.error(e2.getLocalizedMessage());
         } catch (Exception e) {

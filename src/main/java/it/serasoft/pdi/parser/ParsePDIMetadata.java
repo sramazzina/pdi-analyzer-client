@@ -2,6 +2,7 @@ package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
 import it.serasoft.pdi.model.PDIProcessFlowItem;
+import it.serasoft.pdi.model.PDIProcessMissingReferences;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
 import it.serasoft.pdi.utils.ConsoleOutputUtil;
 import it.serasoft.pdi.utils.PDIMetadataPath;
@@ -55,6 +56,7 @@ public abstract class ParsePDIMetadata {
     protected Map<String, PDIProcessParameterHolder> params;
     protected Map<String, PDIProcessFlowItem> steps;
     protected List<ParsePDIMetadata> linkedPDIMetadata;
+    protected List<PDIProcessMissingReferences> missingRefs;
 
     public ParsePDIMetadata(File procFileRef, int depth, boolean followSymlinks) {
 
@@ -69,6 +71,7 @@ public abstract class ParsePDIMetadata {
         connections = new ArrayList<>();
         params = new HashMap<>();
         steps = new HashMap<>();
+        missingRefs = new ArrayList<>();
     }
 
     public abstract void parse();
@@ -87,6 +90,10 @@ public abstract class ParsePDIMetadata {
 
     public Map<String, PDIProcessFlowItem> getSteps() {
         return steps;
+    }
+
+    public List<PDIProcessMissingReferences> getMissingRefs() {
+        return missingRefs;
     }
 
     protected void parseParameters(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
@@ -349,6 +356,9 @@ public abstract class ParsePDIMetadata {
             ConsoleOutputUtil.printParameters((HashMap<String, PDIProcessParameterHolder>) params);
         if (connections != null && !connections.isEmpty())
             ConsoleOutputUtil.printConnections(connections);
+        if (linkedPDIMetadata != null && !linkedPDIMetadata.isEmpty()) {
+            linkedPDIMetadata.forEach(item -> ConsoleOutputUtil.printMissingReferences(item.getMissingRefs()));
+        }
 
 
     }

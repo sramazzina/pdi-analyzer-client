@@ -1,6 +1,7 @@
 package it.serasoft.pdi.utils;
 
 import it.serasoft.pdi.model.PDIProcessConnection;
+import it.serasoft.pdi.model.PDIProcessMissingReferences;
 import it.serasoft.pdi.model.PDIProcessParameterHolder;
 
 import java.util.HashMap;
@@ -51,5 +52,18 @@ public class ConsoleOutputUtil {
                 if (value.length()>0) System.out.println("| | |" +  key + "-> " + value);
             });
         });
+    }
+
+    public static void printMissingReferences(List<PDIProcessMissingReferences> missingRefs) {
+
+        if (!missingRefs.isEmpty()) {
+            System.out.println("| Missing References");
+            System.out.println("| ============================================");
+            missingRefs.forEach(item -> {
+                item.getAttributesMap().forEach((key, value) -> {
+                    System.out.println("| " + key + " -> " + value);
+                });
+            });
+        }
     }
 }
