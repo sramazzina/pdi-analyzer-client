@@ -22,4 +22,5 @@ include 'api'
 include 'services:webservice'
 */
 
+include 'pdi-parser', 'tools-cmdline'
 rootProject.name = 'pdi-tools'
