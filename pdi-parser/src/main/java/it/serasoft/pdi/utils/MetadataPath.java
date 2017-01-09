@@ -29,18 +29,24 @@ import java.util.LinkedList;
  * Creation Date: 24/11/16
  * Description  :
  */
-public class PDIMetadataPath {
+public class MetadataPath {
 
     private LinkedList<String> queue;
-    private static Logger l = LoggerFactory.getLogger(PDIMetadataPath.class);
+    private static Logger l = LoggerFactory.getLogger(MetadataPath.class);
 
 
-    public PDIMetadataPath() {
-        init();
+    public MetadataPath() {
+        init(null);
     }
 
-    protected void init() {
+    public MetadataPath(String rootElement) {
+        init(rootElement);
+    }
+
+    protected void init(String rootElement) {
         queue = new LinkedList<>();
+        if (rootElement != null)
+            push(rootElement);
     }
 
     public void push(String value) {

@@ -1,6 +1,6 @@
 package it.serasoft.pdi.util;
 
-import it.serasoft.pdi.utils.PDIMetadataPath;
+import it.serasoft.pdi.utils.MetadataPath;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertNotNull;
@@ -15,7 +15,7 @@ import static junit.framework.TestCase.assertEquals;
  * Description  :
  */
 
-public class PDIMetadataPathTest {
+public class MetadataPathTest {
 
     @Test
     public void testPop() {
@@ -29,12 +29,28 @@ public class PDIMetadataPathTest {
     @Test
     public void testDepth() {
 
-        PDIMetadataPath metadataPath = new PDIMetadataPath();
+        MetadataPath metadataPath = new MetadataPath("root");
 
         metadataPath.push("a");
         metadataPath.push("b");
         metadataPath.push("c");
         metadataPath.push("d");
+
+        assertNotNull(metadataPath);
+        assertEquals(5, metadataPath.depth());
+
+    }
+
+    @Test
+    public void testDepthRemove() {
+
+        MetadataPath metadataPath = new MetadataPath("root");
+
+        metadataPath.push("a");
+        metadataPath.push("b");
+        metadataPath.push("c");
+        metadataPath.push("d");
+        metadataPath.pop();
 
         assertNotNull(metadataPath);
         assertEquals(4, metadataPath.depth());
@@ -42,25 +58,9 @@ public class PDIMetadataPathTest {
     }
 
     @Test
-    public void testDepthRemove() {
+    public void testPathPush() {
 
-        PDIMetadataPath metadataPath = new PDIMetadataPath();
-
-        metadataPath.push("a");
-        metadataPath.push("b");
-        metadataPath.push("c");
-        metadataPath.push("d");
-        metadataPath.pop();
-
-        assertNotNull(metadataPath);
-        assertEquals(3, metadataPath.depth());
-
-    }
-
-    @Test
-    public void testPath() {
-
-        PDIMetadataPath metadataPath = new PDIMetadataPath();
+        MetadataPath metadataPath = new MetadataPath("root");
 
         metadataPath.push("a");
         metadataPath.push("b");
@@ -68,7 +68,7 @@ public class PDIMetadataPathTest {
         metadataPath.push("d");
 
         assertNotNull(metadataPath);
-        assertEquals("/a/b/c/d", metadataPath.path());
+        assertEquals("/root/a/b/c/d", metadataPath.path());
 
 
     }
@@ -76,7 +76,7 @@ public class PDIMetadataPathTest {
     @Test
     public void testPathRemove() {
 
-        PDIMetadataPath metadataPath = new PDIMetadataPath();
+        MetadataPath metadataPath = new MetadataPath("root");
 
         metadataPath.push("a");
         metadataPath.push("b");
@@ -85,7 +85,7 @@ public class PDIMetadataPathTest {
         metadataPath.pop();
 
         assertNotNull(metadataPath);
-        assertEquals("/a/b/c", metadataPath.path());
+        assertEquals("/root/a/b/c", metadataPath.path());
 
     }
 

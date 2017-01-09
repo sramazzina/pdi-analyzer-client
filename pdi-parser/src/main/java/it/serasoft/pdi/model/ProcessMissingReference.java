@@ -14,18 +14,16 @@ public class ProcessMissingReference {
 
     private String referencingStepName;
     private String referencingProcName;
-    private String referemcingProcFilename;
+    private String referencingProcFilename;
     private String type;
-    private HashMap<String, Object> attributes;
+    private String refValue;
 
     public ProcessMissingReference(String referencingStepName,
                                    String referencingProcName,
-                                   String referemcingProcFilename,
-                                   String type) {
+                                   String referencingProcFilename) {
         this.referencingStepName = referencingStepName;
         this.referencingProcName = referencingProcName;
-        this.referemcingProcFilename = referemcingProcFilename;
-        this.type = type;
+        this.referencingProcFilename = referencingProcFilename;
     }
 
     public String getReferencingStepName() {
@@ -36,18 +34,23 @@ public class ProcessMissingReference {
         return referencingProcName;
     }
 
-    public String getReferemcingProcFilename() {
-        return referemcingProcFilename;
+    public String getReferencingProcFilename() {
+        return referencingProcFilename;
     }
 
-    public void addAttribute(String key, Object value) {
-        if (attributes == null)
-            attributes = new HashMap<>();
-
-        attributes.put(key, value);
+    public String getType() {
+        return type;
     }
 
-    public HashMap<String, Object> getAttributesMap() {
-        return attributes;
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getRefValue() {
+        return refValue;
+    }
+
+    public void setRefValue(String refValue) {
+        this.refValue = refValue;
     }
 }

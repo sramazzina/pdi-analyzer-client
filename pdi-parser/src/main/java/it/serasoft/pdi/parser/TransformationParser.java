@@ -1,9 +1,11 @@
 package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.ProcessConnection;
+import it.serasoft.pdi.model.ProcessMissingReference;
 import it.serasoft.pdi.model.ProcessStep;
 import it.serasoft.pdi.model.ProcessVariable;
-import it.serasoft.pdi.utils.PDIMetadataPath;
+import it.serasoft.pdi.utils.MetadataPath;
+import it.serasoft.pdi.utils.OutputModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,12 +44,14 @@ import java.util.List;
  * Description  :
  */
 
-public class ParseTransformation extends BaseParsePDIProcess {
+public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
 
-    private Logger l = LoggerFactory.getLogger(ParseTransformation.class);
+    private boolean transactional;
 
-    public ParseTransformation(File transFile, int depth, boolean followSymlinks) {
-        super(transFile, depth, followSymlinks);
+    private Logger l = LoggerFactory.getLogger(TransformationParser.class);
+
+    public TransformationParser(File transFile, int depth, boolean followSymlinks, OutputModule outputModule) {
+        super(transFile, depth, followSymlinks, outputModule);
     }
 
     public void parse() {
@@ -57,7 +61,7 @@ public class ParseTransformation extends BaseParsePDIProcess {
     public void parse(String parentPDIProcName, File parentPDIProcFile, String callerStepName) {
 
         try {
-            PDIMetadataPath metadataPath = new PDIMetadataPath();
+            MetadataPath metadataPath = new MetadataPath();
 
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
             String prevElementName = "";
@@ -69,8 +73,8 @@ public class ParseTransformation extends BaseParsePDIProcess {
                 eventType = xmlStreamReader.next();
                 switch (eventType) {
                     case XMLStreamReader.START_ELEMENT:
-                        metadataPath.push(elementName);
                         elementName = xmlStreamReader.getLocalName();
+                        metadataPath.push(elementName);
 
                         if (elementName.equals("step")) {
                             parseStep(xmlStreamReader, metadataPath);
@@ -82,10 +86,10 @@ public class ParseTransformation extends BaseParsePDIProcess {
                                     + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
                                     + (parentPDIProcFile != null ? "\n| Caller Filename: " + parentPDIProcFile.getName() : "")
                                     + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
-                        } else if (elementName.equals("description") && metadataPath.path().equals("/job/description")) {
+                        } else if (elementName.equals("description") && metadataPath.path().equals("/transformation/info/description")) {
                             desc = parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath);
-                        } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
-                            extDesc = parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath);
+                        } else if (elementName.equals("unique_connections") && metadataPath.path().equals("/transformation/info/unique_connections")) {
+                            transactional = (parseSimpleTextElementByName(xmlStreamReader, "unique_connections", metadataPath)).equals("Y");
                         } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
                             parseParameters(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
@@ -102,7 +106,8 @@ public class ParseTransformation extends BaseParsePDIProcess {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
                         if(elementName.equals("transformation")) {
-                            printReport();
+                            // TODO: Manage events on transformation parse finish?
+                            outputObjectContent();
                         }
                         break;
                 }
@@ -114,7 +119,7 @@ public class ParseTransformation extends BaseParsePDIProcess {
         }
     }
 
-    private void parseStep(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath){
+    private void parseStep(XMLStreamReader xmlStreamReader, MetadataPath metadataPath){
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -166,7 +171,7 @@ public class ParseTransformation extends BaseParsePDIProcess {
 
     }
 
-    private void extractVariablesDefinition(String stepName, XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
+    private void extractVariablesDefinition(String stepName, XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;

@@ -2,7 +2,8 @@ package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.ProcessConnection;
 import it.serasoft.pdi.model.ProcessMissingReference;
-import it.serasoft.pdi.utils.PDIMetadataPath;
+import it.serasoft.pdi.utils.MetadataPath;
+import it.serasoft.pdi.utils.OutputModule;
 import it.serasoft.pdi.utils.ResolvePDIInternalVariables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -42,16 +44,15 @@ import java.util.ArrayList;
  * Creation Date: 24/11/16
  * Description  :
  */
-public class ParseJob extends BaseParsePDIProcess {
+public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
 
-    private Logger l = LoggerFactory.getLogger(ParseJob.class);
+    private Logger l = LoggerFactory.getLogger(JobParser.class);
 
-    private String jobName;
-    private String jobDesc;
-    private String jobExtDesc;
 
-    public ParseJob(File jobFile, int depth, boolean followSymlinks) {
-        super(jobFile, depth, followSymlinks);
+    protected String extDesc;
+
+    public JobParser(File jobFile, int depth, boolean followSymlinks, OutputModule outputModule) {
+        super(jobFile, depth, followSymlinks, outputModule);
     }
 
     public void parse() {
@@ -61,7 +62,7 @@ public class ParseJob extends BaseParsePDIProcess {
     public void parse(String parentPDIProcName, File parentprocFileRef, String callerStepName) {
 
         try {
-            PDIMetadataPath metadataPath = new PDIMetadataPath();
+            MetadataPath metadataPath = new MetadataPath();
 
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
             String elementName = null;
@@ -105,7 +106,8 @@ public class ParseJob extends BaseParsePDIProcess {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
                         if(elementName.equals("job")) {
-                            printReport();
+                            // TODO: Manage events on job parse finish?
+                            outputObjectContent();
                         }
                         break;
                 }
@@ -115,9 +117,9 @@ public class ParseJob extends BaseParsePDIProcess {
 
             ProcessMissingReference missingRef = new ProcessMissingReference(callerStepName,
                             parentPDIProcName,
-                            parentprocFileRef.getAbsolutePath(),
-                            "JobRef");
-            missingRef.addAttribute("File Reference:", procFileRef.getAbsoluteFile());
+                            parentprocFileRef.getAbsolutePath());
+            missingRef.setType("JobFileRef");
+            missingRef.setRefValue(procFileRef.getAbsoluteFile().getName());
             missingRefs.add(missingRef);
 /*
             l.error("| WARNING - File " + procFileRef + " was not found as expected by PDI analyzer. Please check!"
@@ -131,8 +133,7 @@ public class ParseJob extends BaseParsePDIProcess {
             l.error(e.getMessage());
         }
     }
-
-    private void parseEntries(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath) {
+    private void parseEntries(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -164,7 +165,7 @@ public class ParseJob extends BaseParsePDIProcess {
 
     }
 
-    private void parseEntry(XMLStreamReader xmlStreamReader, PDIMetadataPath metadataPath){
+    private void parseEntry(XMLStreamReader xmlStreamReader, MetadataPath metadataPath){
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -196,14 +197,14 @@ public class ParseJob extends BaseParsePDIProcess {
                                 procFileRefname = ResolvePDIInternalVariables.internalProcessDirectories(procFileRef.getParent(), procFileRefname);
                                 l.debug("Filename: " + procFileRefname);
                                 if (followSymlinks && entryType.equals("JOB")) {
-                                    ParseJob parseJob = new ParseJob(new File(procFileRefname), depth + 1, false);
+                                    JobParser parseJob = new JobParser(new File(procFileRefname), depth + 1, followSymlinks, outputModule);
                                     parseJob.parse(this.name, procFileRef, entryName);
                                     if (linkedPDIMetadata == null) {
                                         linkedPDIMetadata = new ArrayList<>();
                                     }
                                     linkedPDIMetadata.add(parseJob);
                                 } else if (followSymlinks && entryType.equals("TRANS")) {
-                                    ParseTransformation parseTrans = new ParseTransformation(new File(procFileRefname), depth + 1, false);
+                                    TransformationParser parseTrans = new TransformationParser(new File(procFileRefname), depth + 1, followSymlinks, outputModule);
                                     parseTrans.parse(this.name, procFileRef, entryName);
                                     if (linkedPDIMetadata == null) {
                                         linkedPDIMetadata = new ArrayList<>();

@@ -1,8 +1,10 @@
 package it.serasoft.pdi;
 
 
-import it.serasoft.pdi.parser.ParseJob;
-import it.serasoft.pdi.parser.ParseTransformation;
+import it.serasoft.pdi.model.ProcessMissingReference;
+import it.serasoft.pdi.parser.JobParser;
+import it.serasoft.pdi.parser.TransformationParser;
+import it.serasoft.pdi.utils.ConsoleOutputModule;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -12,22 +14,24 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 
 /**
- *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -60,6 +64,7 @@ public class PDITools {
 
         opts.addOption("report", false, "Generate a report documenting the procedures under analysis");
 
+        opts.addOption("check", true, "Define a list of things to check: parameters, connection, trans_flag");
         opts.addOption("follow", true, "Values: directory, links, none");
         opts.addOption("outDir", true, "Path to output directory where we will write eventual output files");
         opts.addOption("srcDir", true, "Path to base directory containing the PDI processes source");
@@ -70,11 +75,29 @@ public class PDITools {
         String outDir = cmdLine.hasOption("outDir") ? cmdLine.getOptionValue("outDir") : null;
         String srcDir = cmdLine.hasOption("srcDir") ? cmdLine.getOptionValue("srcDir") : null;
         String follow = cmdLine.hasOption("follow") ? cmdLine.getOptionValue("follow") : FOLLOW_DIR;
+        String checks = cmdLine.hasOption("check") ? cmdLine.getOptionValue("check") : null;
+
         // Follow links between procedures only if required and recurseSubdir = false (DEFAULT)
+        ArrayList<String> checksList = null;
+        if (checks != null)
+             checksList = getListOfChecks(checks);
         boolean recurseDir = follow.equals(FOLLOW_DIR);
         boolean followLinks = follow.equals(FOLLOW_PROCLINKS);
 
         startReadingDir(srcDir, recurseDir, followLinks);
+    }
+
+    protected static ArrayList<String> getListOfChecks(String checks) {
+
+        ArrayList<String> listOfChecks = null;
+        StringTokenizer strTok = new StringTokenizer(checks, ",");
+        while (strTok.hasMoreTokens()) {
+            if (listOfChecks == null)
+                listOfChecks = new ArrayList<>();
+            listOfChecks.add(strTok.nextToken());
+        }
+
+        return listOfChecks;
     }
 
     private static void startReadingDir(String srcDir, boolean recurse, boolean followLinks) {
@@ -97,11 +120,11 @@ public class PDITools {
 
         File[] files = f.listFiles();
         for (File item : files) {
-            if (recurse && item.isDirectory() && !item.isHidden() ) {
+            if (recurse && item.isDirectory() && !item.isHidden()) {
                 getFilesList(item, completeFilesList, recurse);
             } else if (item.isFile() && !item.isHidden() &&
                     (item.getName().endsWith(EXT_PDI_JOB) ||
-                    item.getName().endsWith(EXT_PDI_TRANSFORMATION))) {
+                            item.getName().endsWith(EXT_PDI_TRANSFORMATION))) {
                 completeFilesList.add(item);
             }
         }
@@ -111,11 +134,14 @@ public class PDITools {
 
         String name = f.getName();
 
+        // TODO By default for now we output everything to console output
         if (name.endsWith(EXT_PDI_JOB)) {
-            ParseJob pje = new ParseJob(f, 0, followLinks);
+            JobParser pje = new JobParser(f, 0, followLinks, new ConsoleOutputModule());
             pje.parse();
+            List<ProcessMissingReference> missingReferences = pje.getMissingFilesReferencesList();
+            List<String> referencedProcessFilesList = pje.getReferencedProcessFilesList();
         } else if (name.endsWith(EXT_PDI_TRANSFORMATION)) {
-            ParseTransformation parseTransf = new ParseTransformation(f, 0, followLinks);
+            TransformationParser parseTransf = new TransformationParser(f, 0, followLinks, new ConsoleOutputModule());
             parseTransf.parse();
         }
     }
