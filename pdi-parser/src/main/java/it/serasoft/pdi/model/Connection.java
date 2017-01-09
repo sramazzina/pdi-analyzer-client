@@ -31,8 +31,8 @@ public class Connection {
 
     private String name;
     private File pdiProcFile;
-    private HashMap<String, String> properties = new HashMap<>();
-    private HashMap<String, String> jdbcAttributes = new HashMap<>();
+    private HashMap<String, String> properties;
+    private HashMap<String, String> jdbcAttributes;
 
     public Connection(String name, File pdiProcFile) {
         this.name = name;

@@ -33,7 +33,7 @@ public enum ProcessTypeEnum {
 
     private String value;
 
-    private ProcessTypeEnum(String value) {
+    ProcessTypeEnum(String value) {
         this.value = value;
     }
 

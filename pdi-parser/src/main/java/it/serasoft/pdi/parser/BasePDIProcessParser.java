@@ -15,22 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
  * Class Name   : ParsePDIMetadata.java
  * Package Name : it.serasoft.pdi.utils
  * <p>
@@ -107,9 +91,9 @@ public abstract class BasePDIProcessParser {
 
     protected void parseParameters(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -141,9 +125,9 @@ public abstract class BasePDIProcessParser {
     protected void parseParameter(XMLStreamReader xmlStreamReader,
                                   MetadataPath metadataPath) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
         String paramName = null;
 
         Parameter parameterHolder = null;
@@ -154,11 +138,16 @@ public abstract class BasePDIProcessParser {
                     case XMLStreamReader.START_ELEMENT:
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
+
+
                         if (elementName.equals("default_value")) {
+                            assert parameterHolder != null;
                             parameterHolder.setDefaultValue(readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("name")) {
-                            parameterHolder = new Parameter(readElementText(xmlStreamReader, metadataPath));
+                            paramName = readElementText(xmlStreamReader, metadataPath);
+                            parameterHolder = new Parameter(paramName);
                         } else if (elementName.equals("description")) {
+                            assert parameterHolder != null;
                             parameterHolder.setDescription(readElementText(xmlStreamReader, metadataPath));
                         }
                         break;
@@ -183,10 +172,10 @@ public abstract class BasePDIProcessParser {
 
     protected Connection parseConnection(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
-        String elementValue = null;
+        String elementName;
+        String elementValue;
         Connection retConn = null;
 
         try {
@@ -203,7 +192,7 @@ public abstract class BasePDIProcessParser {
                             if (elementName.equals("name")) {
                                 retConn = new Connection(elementValue, procFileRef);
                             } else {
-                                retConn.getProperties().put(elementName, elementValue);
+                                addConnectionPropertyToCollectedMetadata(retConn, elementName, elementValue);
                             }
                         }
                         break;
@@ -227,11 +216,11 @@ public abstract class BasePDIProcessParser {
 
     private void parseConnectionAttributes(XMLStreamReader xmlStreamReader,
                                            MetadataPath metadataPath,
-                                           Connection valuesMap) {
+                                           Connection conn) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -241,7 +230,7 @@ public abstract class BasePDIProcessParser {
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
                         if (elementName.equals("attribute")) {
-                            parseConnectionAttribute(xmlStreamReader, metadataPath, valuesMap);
+                            parseConnectionAttribute(xmlStreamReader, metadataPath, conn);
                         }
                         break;
                     case XMLStreamReader.END_ELEMENT:
@@ -262,11 +251,11 @@ public abstract class BasePDIProcessParser {
 
     protected void parseConnectionAttribute(XMLStreamReader xmlStreamReader,
                                             MetadataPath metadataPath,
-                                            Connection valuesMap) {
+                                            Connection conn) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
         String elementValue = null;
 
         try {
@@ -279,7 +268,7 @@ public abstract class BasePDIProcessParser {
                         if (elementName.equals("code")) {
                             elementValue = readElementText(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("attribute")) {
-                            valuesMap.getJdbcAttributes().put(elementValue, readElementText(xmlStreamReader, metadataPath));
+                            addJdbcAttributeToCollectedMetadata(conn, elementValue, readElementText(xmlStreamReader, metadataPath));
                         }
                         break;
                     case XMLStreamReader.END_ELEMENT:
@@ -302,9 +291,10 @@ public abstract class BasePDIProcessParser {
                                                   String elementName,
                                                   MetadataPath metadataPath) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String rValue = null;
+        String rValue;
+        String currentElementName;
 
         rValue = readElementText(xmlStreamReader, metadataPath);
         l.debug(elementName + ": " + rValue);
@@ -314,8 +304,8 @@ public abstract class BasePDIProcessParser {
                 eventType = xmlStreamReader.next();
                 switch (eventType) {
                     case XMLStreamReader.END_ELEMENT:
-                        elementName = xmlStreamReader.getLocalName();
-                        if (elementName.equals(elementName))
+                        currentElementName = xmlStreamReader.getLocalName();
+                        if (currentElementName.equals(elementName))
                             elementAnalyzed = true;
                         break;
                 }
@@ -333,7 +323,7 @@ public abstract class BasePDIProcessParser {
 
         StringBuilder content = new StringBuilder();
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
 
         try {
@@ -442,6 +432,40 @@ public abstract class BasePDIProcessParser {
             collectedProcessMetadata.getSteps().put(name, step);
         } else {
             // TODO Throws exception in case parameter is null
+        }
+    }
+
+    protected void addConnectionPropertyToCollectedMetadata(Connection c, String name, String value) {
+
+        if (name == null) {
+            // TODO Throws exception in case step's connection property name is null
+        }
+
+        if (value != null) {
+            if (c.getProperties() == null)
+                // Lazy init connection properties structure
+                c.setProperties(new HashMap<>());
+
+            c.getProperties().put(name, value);
+        } else {
+            // TODO Throws exception in case connection property is null
+        }
+    }
+
+    protected void addJdbcAttributeToCollectedMetadata(Connection c, String name, String value) {
+
+        if (name == null) {
+            // TODO Throws exception in case JDBC attribute's name is null
+        }
+
+        if (value != null) {
+            if (c.getJdbcAttributes() == null)
+                // Lazy init parameters structure
+                c.setJdbcAttributes(new HashMap<>());
+
+            c.getJdbcAttributes().put(name, value);
+        } else {
+            // TODO Throws exception in case JDBC attribute is null
         }
     }
 }

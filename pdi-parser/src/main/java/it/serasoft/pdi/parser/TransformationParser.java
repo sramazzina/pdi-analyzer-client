@@ -62,8 +62,8 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
 
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
             String prevElementName = "";
-            String elementName = null;
-            int eventType = 0;
+            String elementName;
+            int eventType;
 
             // Set process type in collected informations' structure
             collectedProcessMetadata.setTypeEnum(ProcessTypeEnum.TRANSFORMATION);
@@ -121,11 +121,11 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
 
     private void parseStep(XMLStreamReader xmlStreamReader, MetadataPath metadataPath){
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
         String stepName = null;
-        String pdiProcFilename = null;
+        String pdiProcFilename;
         Step step = null;
 
         try {
@@ -145,6 +145,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                                 extractVariablesDefinition(stepName, xmlStreamReader, metadataPath);
                             }
                         } else if (elementName.equals("description")) {
+                            assert step != null;
                             step.setDescription(readElementText(xmlStreamReader, metadataPath));
                             l.debug("Description: " + step.getName());
                         } else if (elementName.equals("filename")) {
@@ -173,9 +174,9 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
 
     private void extractVariablesDefinition(String stepName, XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
         Variable var = null;
 
         try {
@@ -188,6 +189,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         if (elementName.equals("variable_name")) {
                             var = new Variable(stepName, readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("variable_type")) {
+                            assert var != null;
                             var.setScope(readElementText(xmlStreamReader, metadataPath));
                         }
                         break;

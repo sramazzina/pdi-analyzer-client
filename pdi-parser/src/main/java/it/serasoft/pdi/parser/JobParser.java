@@ -62,8 +62,8 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
             MetadataPath metadataPath = new MetadataPath();
 
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
-            String elementName = null;
-            int eventType = 0;
+            String elementName;
+            int eventType;
 
             // Set process type in collected informations' structure
             collectedProcessMetadata.setTypeEnum(ProcessTypeEnum.JOB);
@@ -141,9 +141,9 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
 
     private void parseEntries(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
-        int eventType = 0;
+        int eventType;
         boolean elementAnalyzed = false;
-        String elementName = null;
+        String elementName;
 
         try {
             while (xmlStreamReader.hasNext() && !elementAnalyzed) {
@@ -173,13 +173,13 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
 
     private void parseEntry(XMLStreamReader xmlStreamReader, MetadataPath metadataPath){
 
-        int eventType;
         boolean elementAnalyzed = false;
         String elementName;
         String entryType = null;
         String entryName = null;
         String entryDescription;
         String procFileRefname;
+        int eventType;
 
         try {
             while (xmlStreamReader.hasNext() && !elementAnalyzed) {
@@ -203,6 +203,9 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
                             if (procFileRefname != null) {
                                 procFileRefname = ResolvePDIInternalVariables.internalProcessDirectories(procFileRef.getParent(), procFileRefname);
                                 l.debug("Filename: " + procFileRefname);
+
+                                assert entryType != null;
+
                                 if (followSymlinks && entryType.equals("JOB")) {
                                     JobParser parseJob = new JobParser(new File(procFileRefname), depth + 1, followSymlinks, outputModule);
                                     parseJob.parse(thisProcName, procFileRef, entryName);
@@ -210,13 +213,15 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
                                         linkedPDIMetadata = new ArrayList<>();
                                     }
                                     linkedPDIMetadata.add(parseJob);
-                                } else if (followSymlinks && entryType.equals("TRANS")) {
-                                    TransformationParser parseTrans = new TransformationParser(new File(procFileRefname), depth + 1, followSymlinks, outputModule);
-                                    parseTrans.parse(thisProcName, procFileRef, entryName);
-                                    if (linkedPDIMetadata == null) {
-                                        linkedPDIMetadata = new ArrayList<>();
+                                } else {
+                                    if (followSymlinks && entryType.equals("TRANS")) {
+                                        TransformationParser parseTrans = new TransformationParser(new File(procFileRefname), depth + 1, followSymlinks, outputModule);
+                                        parseTrans.parse(thisProcName, procFileRef, entryName);
+                                        if (linkedPDIMetadata == null) {
+                                            linkedPDIMetadata = new ArrayList<>();
+                                        }
+                                        linkedPDIMetadata.add(parseTrans);
                                     }
-                                    linkedPDIMetadata.add(parseTrans);
                                 }
                             }
                         }

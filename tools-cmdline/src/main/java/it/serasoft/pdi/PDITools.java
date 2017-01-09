@@ -81,6 +81,7 @@ public class PDITools {
         ArrayList<String> checksList = null;
         if (checks != null)
              checksList = getListOfChecks(checks);
+
         boolean recurseDir = follow.equals(FOLLOW_DIR);
         boolean followLinks = follow.equals(FOLLOW_PROCLINKS);
 
