@@ -1,12 +1,5 @@
-package it.serasoft.pdi.utils;
+package it.serasoft.pdi.model;
 
-import it.serasoft.pdi.model.Connection;
-import it.serasoft.pdi.model.MissingReference;
-import it.serasoft.pdi.model.Parameter;
-import it.serasoft.pdi.model.Variable;
-
-import java.util.HashMap;
-import java.util.List;
 
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
@@ -25,22 +18,28 @@ import java.util.List;
  */
 
 /**
- * Class Name   : OutputModule.java
- * Package Name : it.serasoft.pdi.utils
+ * Class Name   : ProcessTypeEnum.java
+ * Package Name : it.serasoft.pdi.model
  * <p>
  * Created By   : Sergio Ramazzina - sergio.ramazzina@serasoft.it
  * Creation Date: 09/01/17
  * Description  :
  */
-public interface OutputModule {
 
-    void printGeneralInfos();
+public enum ProcessTypeEnum {
 
-    void printParameters(HashMap<String, Parameter> parms);
+    JOB("Job"),
+    TRANSFORMATION("Transformation");
 
-    void printVariables(List<Variable> vars);
+    private String value;
 
-    void printConnections(List<Connection> conns);
+    private ProcessTypeEnum(String value) {
+        this.value = value;
+    }
 
-    void printMissingReferences(List<MissingReference> missingRefs);
+    public String getValue() {
+        return value;
+    }
+
+
 }

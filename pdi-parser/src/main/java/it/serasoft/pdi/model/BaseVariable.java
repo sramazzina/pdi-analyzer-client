@@ -8,11 +8,11 @@ package it.serasoft.pdi.model;
  * Creation Date: 01/12/16
  * Description  :
  */
-public class BaseProcessVariable {
+public class BaseVariable {
 
     private String name;
 
-    public BaseProcessVariable(String name) {
+    public BaseVariable(String name) {
         this.name = name;
     }
 

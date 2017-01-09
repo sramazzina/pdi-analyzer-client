@@ -48,32 +48,21 @@ public abstract class BasePDIProcessParser {
     protected int depth;
     protected boolean followSymlinks;
 
-    protected String name;
-    protected String desc;
+    protected  ProcessMetadata collectedProcessMetadata;
 
-    protected List<ProcessConnection> connections;
-    protected Map<String, ProcessParameter> params;
-    protected Map<String, ProcessStep> steps;
     protected List<BasePDIProcessParser> linkedPDIMetadata;
-    protected List<ProcessMissingReference> missingRefs;
-    protected List<ProcessVariable> vars;
 
     public BasePDIProcessParser(File procFileRef, int depth, boolean followSymlinks, OutputModule outputModule) {
+        init(procFileRef, depth, followSymlinks, outputModule);
+    }
+
+    protected void init(File procFileRef, int depth, boolean followSymlinks, OutputModule outputModule) {
+        collectedProcessMetadata = new ProcessMetadata();
 
         this.outputModule = outputModule;
         this.procFileRef = procFileRef;
         this.depth = depth;
         this.followSymlinks = followSymlinks;
-        init();
-    }
-
-    protected void init() {
-
-        connections = new ArrayList<>();
-        params = new HashMap<>();
-        steps = new HashMap<>();
-        missingRefs = new ArrayList<>();
-        vars = new ArrayList<>();
     }
 
     public abstract void parse();
@@ -83,15 +72,16 @@ public abstract class BasePDIProcessParser {
                                String callerStepName);
 
 
-    public List<ProcessMissingReference> getMissingFilesReferencesList() {
+    public List<MissingReference> getMissingFilesReferencesList() {
 
-        final List<ProcessMissingReference> missingRefs = new ArrayList<>();
+        final List<MissingReference> missingRefs = new ArrayList<>();
+        List<MissingReference> collectedMissingReferences = collectedProcessMetadata.getMissingRefs();
 
         if (this.linkedPDIMetadata != null && !this.linkedPDIMetadata.isEmpty()) {
             this.linkedPDIMetadata.forEach(item -> missingRefs.addAll(item.getMissingFilesReferencesList()));
         } else {
-            if (!this.missingRefs.isEmpty()) {
-                this.missingRefs.forEach(item -> missingRefs.add(item));
+            if (!collectedMissingReferences.isEmpty()) {
+                collectedMissingReferences.forEach(item -> missingRefs.add(item));
             }
         }
 
@@ -112,23 +102,6 @@ public abstract class BasePDIProcessParser {
         }
 
         return refFilesList;
-    }
-
-
-    public List<ProcessConnection> getConnections() {
-        return connections;
-    }
-
-    public Map<String, ProcessParameter> getParams() {
-        return params;
-    }
-
-    public Map<String, ProcessStep> getSteps() {
-        return steps;
-    }
-
-    public List<ProcessMissingReference> getMissingRefs() {
-        return missingRefs;
     }
 
     protected void parseParameters(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
@@ -172,7 +145,7 @@ public abstract class BasePDIProcessParser {
         String elementName = null;
         String paramName = null;
 
-        ProcessParameter parameterHolder = null;
+        Parameter parameterHolder = null;
         try {
             while (xmlStreamReader.hasNext()) {
                 eventType = xmlStreamReader.next();
@@ -183,7 +156,7 @@ public abstract class BasePDIProcessParser {
                         if (elementName.equals("default_value")) {
                             parameterHolder.setDefaultValue(readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("name")) {
-                            parameterHolder = new ProcessParameter(readElementText(xmlStreamReader, metadataPath));
+                            parameterHolder = new Parameter(readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("description")) {
                             parameterHolder.setDescription(readElementText(xmlStreamReader, metadataPath));
                         }
@@ -191,7 +164,7 @@ public abstract class BasePDIProcessParser {
                     case XMLStreamReader.END_ELEMENT:
                         metadataPath.pop();
                         elementName = xmlStreamReader.getLocalName();
-                        params.put(paramName, parameterHolder);
+                        addParameterToCollectedMetadata(paramName, parameterHolder);
                         if (elementName.equals("parameter")) {
                             elementAnalyzed = true;
                         }
@@ -207,13 +180,13 @@ public abstract class BasePDIProcessParser {
     }
 
 
-    protected ProcessConnection parseConnection(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
+    protected Connection parseConnection(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
         String elementValue = null;
-        ProcessConnection retConn = null;
+        Connection retConn = null;
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -227,7 +200,7 @@ public abstract class BasePDIProcessParser {
                         } else {
                             elementValue = readElementText(xmlStreamReader, metadataPath);
                             if (elementName.equals("name")) {
-                                retConn = new ProcessConnection(elementValue, procFileRef);
+                                retConn = new Connection(elementValue, procFileRef);
                             } else {
                                 retConn.getProperties().put(elementName, elementValue);
                             }
@@ -253,7 +226,7 @@ public abstract class BasePDIProcessParser {
 
     private void parseConnectionAttributes(XMLStreamReader xmlStreamReader,
                                            MetadataPath metadataPath,
-                                           ProcessConnection valuesMap) {
+                                           Connection valuesMap) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -288,7 +261,7 @@ public abstract class BasePDIProcessParser {
 
     protected void parseConnectionAttribute(XMLStreamReader xmlStreamReader,
                                             MetadataPath metadataPath,
-                                            ProcessConnection valuesMap) {
+                                            Connection valuesMap) {
 
         int eventType = 0;
         boolean elementAnalyzed = false;
@@ -387,14 +360,19 @@ public abstract class BasePDIProcessParser {
 
     public void outputObjectContent() {
 
+        List<Connection> connections = collectedProcessMetadata.getConnections();
+        Map<String, Parameter> params = collectedProcessMetadata.getParams();
+        List<MissingReference> missingRefs = collectedProcessMetadata.getMissingRefs();
+        List<Variable> vars = collectedProcessMetadata.getVars();
+
         if (params != null && !params.isEmpty())
-            outputModule.printParameters((HashMap<String, ProcessParameter>) params);
+            outputModule.printParameters((HashMap<String, Parameter>) params);
         if (vars != null && !vars.isEmpty())
             outputModule.printVariables(vars);
         if (connections != null && !connections.isEmpty())
             outputModule.printConnections(connections);
         if (linkedPDIMetadata != null && !linkedPDIMetadata.isEmpty()) {
-            linkedPDIMetadata.forEach(item -> outputModule.printMissingReferences(item.getMissingRefs()));
+            linkedPDIMetadata.forEach(item -> outputModule.printMissingReferences(missingRefs));
         }
 
 
@@ -404,7 +382,65 @@ public abstract class BasePDIProcessParser {
     public String toString() {
         return "BasePDIProcessParser{" +
                 "procFileRef=" + procFileRef.getName() +
-                ", name='" + name + '\'' +
+                ", name='" + collectedProcessMetadata.getName() + '\'' +
                 '}';
+    }
+
+    protected void addConnectionToCollectedMetadata(Connection conn) {
+        if (conn != null) {
+            if (collectedProcessMetadata.getConnections() == null)
+                // Lazy init connections structure
+                collectedProcessMetadata.setConnections(new ArrayList<>());
+
+            collectedProcessMetadata.getConnections().add(conn);
+        } else {
+            // TODO Throws exception in case connection is null
+        }
+    }
+
+    protected void addVariableToCollectedMetadata(Variable var) {
+        if (var != null) {
+            if (collectedProcessMetadata.getVars() == null)
+                // Lazy init variables structure
+                collectedProcessMetadata.setVars(new ArrayList<>());
+
+            collectedProcessMetadata.getVars().add(var);
+        } else {
+            // TODO Throws exception in case variable is null
+        }
+    }
+
+    protected void addParameterToCollectedMetadata(String name, Parameter parameter) {
+
+        if (name == null) {
+            // TODO Throws exception in case parameter's name is null
+        }
+
+        if (parameter != null) {
+            if (collectedProcessMetadata.getParams() == null)
+                // Lazy init parameters structure
+                collectedProcessMetadata.setParams(new HashMap<>());
+
+            collectedProcessMetadata.getParams().put(name, parameter);
+        } else {
+            // TODO Throws exception in case parameter is null
+        }
+    }
+
+    protected void addStepToCollectedMetadata(String name, Step step) {
+
+        if (name == null) {
+            // TODO Throws exception in case step's name is null
+        }
+
+        if (step != null) {
+            if (collectedProcessMetadata.getSteps() == null)
+                // Lazy init parameters structure
+                collectedProcessMetadata.setSteps(new HashMap<>());
+
+            collectedProcessMetadata.getSteps().put(name, step);
+        } else {
+            // TODO Throws exception in case parameter is null
+        }
     }
 }

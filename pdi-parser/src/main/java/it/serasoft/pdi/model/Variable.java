@@ -8,12 +8,12 @@ package it.serasoft.pdi.model;
  * Creation Date: 01/12/16
  * Description  :
  */
-public class ProcessVariable extends BaseProcessVariable {
+public class Variable extends BaseVariable {
 
     private String scope;
     private String stepName;
 
-    public ProcessVariable(String stepName, String name) {
+    public Variable(String stepName, String name) {
         super(name);
         this.stepName = stepName;
     }

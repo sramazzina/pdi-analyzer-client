@@ -1,7 +1,7 @@
 package it.serasoft.pdi;
 
 
-import it.serasoft.pdi.model.ProcessMissingReference;
+import it.serasoft.pdi.model.MissingReference;
 import it.serasoft.pdi.parser.JobParser;
 import it.serasoft.pdi.parser.TransformationParser;
 import it.serasoft.pdi.utils.ConsoleOutputModule;
@@ -138,7 +138,7 @@ public class PDITools {
         if (name.endsWith(EXT_PDI_JOB)) {
             JobParser pje = new JobParser(f, 0, followLinks, new ConsoleOutputModule());
             pje.parse();
-            List<ProcessMissingReference> missingReferences = pje.getMissingFilesReferencesList();
+            List<MissingReference> missingReferences = pje.getMissingFilesReferencesList();
             List<String> referencedProcessFilesList = pje.getReferencedProcessFilesList();
         } else if (name.endsWith(EXT_PDI_TRANSFORMATION)) {
             TransformationParser parseTransf = new TransformationParser(f, 0, followLinks, new ConsoleOutputModule());

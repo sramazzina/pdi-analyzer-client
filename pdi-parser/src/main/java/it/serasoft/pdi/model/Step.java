@@ -8,13 +8,13 @@ package it.serasoft.pdi.model;
  * Creation Date: 27/11/16
  * Description  :
  */
-public class ProcessStep {
+public class Step {
 
     private String name;
     private String description;
     private String type;
 
-    public ProcessStep(String name, String type) {
+    public Step(String name, String type) {
         this.name = name;
         this.type = type;
     }

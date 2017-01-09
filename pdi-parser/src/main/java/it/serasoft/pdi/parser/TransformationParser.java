@@ -1,9 +1,8 @@
 package it.serasoft.pdi.parser;
 
-import it.serasoft.pdi.model.ProcessConnection;
-import it.serasoft.pdi.model.ProcessMissingReference;
-import it.serasoft.pdi.model.ProcessStep;
-import it.serasoft.pdi.model.ProcessVariable;
+import it.serasoft.pdi.model.Connection;
+import it.serasoft.pdi.model.Step;
+import it.serasoft.pdi.model.Variable;
 import it.serasoft.pdi.utils.MetadataPath;
 import it.serasoft.pdi.utils.OutputModule;
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
@@ -45,8 +43,6 @@ import java.util.List;
  */
 
 public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
-
-    private boolean transactional;
 
     private Logger l = LoggerFactory.getLogger(TransformationParser.class);
 
@@ -79,25 +75,25 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         if (elementName.equals("step")) {
                             parseStep(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("name") && prevElementName.equals("info")) {
-                            name = parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath);
-                            System.out.println("Analyzing transformation metadata - File: " + name
+                            collectedProcessMetadata.setName(parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath));
+                            System.out.println("Analyzing transformation metadata - File: " + collectedProcessMetadata.getName()
                                     + "\n| Filename: " + procFileRef.getName()
                                     + "\n| Path: " + procFileRef.getParent()
                                     + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
                                     + (parentPDIProcFile != null ? "\n| Caller Filename: " + parentPDIProcFile.getName() : "")
                                     + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
                         } else if (elementName.equals("description") && metadataPath.path().equals("/transformation/info/description")) {
-                            desc = parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath);
+                            collectedProcessMetadata.setDescription(parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath));
+                        } else if (elementName.equals("extended_description") && metadataPath.path().equals("/transformation/extended_description")) {
+                            collectedProcessMetadata.setExtendedDescription((parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath)));
                         } else if (elementName.equals("unique_connections") && metadataPath.path().equals("/transformation/info/unique_connections")) {
-                            transactional = (parseSimpleTextElementByName(xmlStreamReader, "unique_connections", metadataPath)).equals("Y");
+                            collectedProcessMetadata.setTransactional(parseSimpleTextElementByName(xmlStreamReader, "unique_connections", metadataPath));
                         } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
                             parseParameters(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
-                            ProcessConnection conn = parseConnection(xmlStreamReader, metadataPath);
+                            Connection conn = parseConnection(xmlStreamReader, metadataPath);
 
-                            if (conn != null) {
-                                connections.add(conn);
-                            }
+                            addConnectionToCollectedMetadata(conn);
                         }
                         prevElementName = elementName;
                         break;
@@ -113,7 +109,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                 }
             }
         } catch (FileNotFoundException e1) {
-
+            // TODO Manage missing refs for transformations. There could exists in Mapping, Transf Executor
         } catch (XMLStreamException e2) {
             l.error(e2.getLocalizedMessage());
         }
@@ -126,7 +122,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
         String elementName = null;
         String stepName = null;
         String pdiProcFilename = null;
-        ProcessStep step = null;
+        Step step = null;
 
         try {
             while (xmlStreamReader.hasNext() && !elementAnalyzed) {
@@ -139,7 +135,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                             stepName = readElementText(xmlStreamReader, metadataPath);
                             l.debug("Name: " + stepName);
                         } else if (elementName.equals("type")) {
-                            step = new ProcessStep(stepName, readElementText(xmlStreamReader, metadataPath));
+                            step = new Step(stepName, readElementText(xmlStreamReader, metadataPath));
                             l.debug("Type: " + step.getType());
                             if (step.getType().equals("SetVariable")) {
                                 extractVariablesDefinition(stepName, xmlStreamReader, metadataPath);
@@ -158,7 +154,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
                         // Each step is identified in the map's keys set by using its name
-                        steps.put(stepName, step);
+                        addStepToCollectedMetadata(stepName, step);
                         if (elementName.equals("step"))
                             elementAnalyzed = true;
                         break;
@@ -176,7 +172,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
         int eventType = 0;
         boolean elementAnalyzed = false;
         String elementName = null;
-        ProcessVariable var = null;
+        Variable var = null;
 
         try {
             while (xmlStreamReader.hasNext()) {
@@ -186,7 +182,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
                         if (elementName.equals("variable_name")) {
-                            var = new ProcessVariable(stepName, readElementText(xmlStreamReader, metadataPath));
+                            var = new Variable(stepName, readElementText(xmlStreamReader, metadataPath));
                         } else if (elementName.equals("variable_type")) {
                             var.setScope(readElementText(xmlStreamReader, metadataPath));
                         }
@@ -197,7 +193,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         if (elementName.equals("fields"))
                             elementAnalyzed = true;
                         else if (elementName.equals("field"))
-                            vars.add(var);
+                            addVariableToCollectedMetadata(var);
                         break;
                 }
 

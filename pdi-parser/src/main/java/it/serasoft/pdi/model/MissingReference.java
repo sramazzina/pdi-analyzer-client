@@ -10,7 +10,7 @@ import java.util.HashMap;
  * Creation Date: 30/11/16
  * Description  :
  */
-public class ProcessMissingReference {
+public class MissingReference {
 
     private String referencingStepName;
     private String referencingProcName;
@@ -18,9 +18,9 @@ public class ProcessMissingReference {
     private String type;
     private String refValue;
 
-    public ProcessMissingReference(String referencingStepName,
-                                   String referencingProcName,
-                                   String referencingProcFilename) {
+    public MissingReference(String referencingStepName,
+                            String referencingProcName,
+                            String referencingProcFilename) {
         this.referencingStepName = referencingStepName;
         this.referencingProcName = referencingProcName;
         this.referencingProcFilename = referencingProcFilename;

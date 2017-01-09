@@ -24,12 +24,12 @@ package it.serasoft.pdi.model;
  * Creation Date: 24/11/16
  * Description  :
  */
-public class ProcessParameter extends BaseProcessVariable {
+public class Parameter extends BaseVariable {
 
     private String defaultValue;
     private String description;
 
-    public ProcessParameter(String name) {
+    public Parameter(String name) {
 
         super(name);
     }

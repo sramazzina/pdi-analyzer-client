@@ -1,9 +1,9 @@
 package it.serasoft.pdi.utils;
 
-import it.serasoft.pdi.model.ProcessConnection;
-import it.serasoft.pdi.model.ProcessMissingReference;
-import it.serasoft.pdi.model.ProcessParameter;
-import it.serasoft.pdi.model.ProcessVariable;
+import it.serasoft.pdi.model.Connection;
+import it.serasoft.pdi.model.MissingReference;
+import it.serasoft.pdi.model.Parameter;
+import it.serasoft.pdi.model.Variable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +36,12 @@ import java.util.List;
 
 public class ConsoleOutputModule implements OutputModule {
 
-    public void printParameters(HashMap<String, ProcessParameter> parms) {
+    @Override
+    public void printGeneralInfos() {
+
+    }
+
+    public void printParameters(HashMap<String, Parameter> parms) {
 
         System.out.println("| Parameters");
         System.out.println("| ============================================");
@@ -45,7 +50,7 @@ public class ConsoleOutputModule implements OutputModule {
         });
     }
 
-    public void printVariables(List<ProcessVariable> vars) {
+    public void printVariables(List<Variable> vars) {
 
         System.out.println("| Variables");
         System.out.println("| ============================================");
@@ -54,7 +59,7 @@ public class ConsoleOutputModule implements OutputModule {
         });
     }
 
-    public void printConnections(List<ProcessConnection> conns) {
+    public void printConnections(List<Connection> conns) {
         System.out.println("| Connections");
         System.out.println("| ============================================");
         conns.forEach(item -> {
@@ -65,7 +70,7 @@ public class ConsoleOutputModule implements OutputModule {
         });
     }
 
-    public void printMissingReferences(List<ProcessMissingReference> missingRefs) {
+    public void printMissingReferences(List<MissingReference> missingRefs) {
 
         if (!missingRefs.isEmpty()) {
             System.out.println("| Missing References");
