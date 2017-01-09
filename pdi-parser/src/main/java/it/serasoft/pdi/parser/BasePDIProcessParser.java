@@ -57,6 +57,7 @@ public abstract class BasePDIProcessParser {
     }
 
     protected void init(File procFileRef, int depth, boolean followSymlinks, OutputModule outputModule) {
+
         collectedProcessMetadata = new ProcessMetadata();
 
         this.outputModule = outputModule;

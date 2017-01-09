@@ -1,6 +1,7 @@
 package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.Connection;
+import it.serasoft.pdi.model.ProcessTypeEnum;
 import it.serasoft.pdi.model.Step;
 import it.serasoft.pdi.model.Variable;
 import it.serasoft.pdi.utils.MetadataPath;
@@ -63,6 +64,9 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
             String prevElementName = "";
             String elementName = null;
             int eventType = 0;
+
+            // Set process type in collected informations' structure
+            collectedProcessMetadata.setTypeEnum(ProcessTypeEnum.TRANSFORMATION);
 
             while (xmlStreamReader.hasNext()) {
 

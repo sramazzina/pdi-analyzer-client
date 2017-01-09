@@ -2,6 +2,7 @@ package it.serasoft.pdi.parser;
 
 import it.serasoft.pdi.model.Connection;
 import it.serasoft.pdi.model.MissingReference;
+import it.serasoft.pdi.model.ProcessTypeEnum;
 import it.serasoft.pdi.utils.MetadataPath;
 import it.serasoft.pdi.utils.OutputModule;
 import it.serasoft.pdi.utils.ResolvePDIInternalVariables;
@@ -63,6 +64,9 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
             String elementName = null;
             int eventType = 0;
+
+            // Set process type in collected informations' structure
+            collectedProcessMetadata.setTypeEnum(ProcessTypeEnum.JOB);
 
             while (xmlStreamReader.hasNext()) {
 
