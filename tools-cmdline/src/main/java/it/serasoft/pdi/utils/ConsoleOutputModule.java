@@ -1,12 +1,10 @@
 package it.serasoft.pdi.utils;
 
-import it.serasoft.pdi.model.Connection;
-import it.serasoft.pdi.model.MissingReference;
-import it.serasoft.pdi.model.Parameter;
-import it.serasoft.pdi.model.Variable;
+import it.serasoft.pdi.model.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
@@ -36,12 +34,25 @@ import java.util.List;
 
 public class ConsoleOutputModule implements OutputModule {
 
-    @Override
-    public void printGeneralInfos() {
+    public void printObjectInfos(ProcessMetadata metadata, List<MissingReference> missingRefs) {
 
+        List<Connection> connections = metadata.getConnections();
+        Map<String, Parameter> params = metadata.getParams();
+        // List<MissingReference> missingRefs = metadata.getMissingRefs();
+        List<Variable> vars = metadata.getVars();
+
+        if (params != null && !params.isEmpty())
+            printParameters((HashMap<String, Parameter>) params);
+        if (vars != null && !vars.isEmpty())
+            printVariables(vars);
+        if (connections != null && !connections.isEmpty())
+            printConnections(connections);
+        /*if (linkedPDIMetadata != null && !linkedPDIMetadata.isEmpty()) {
+            linkedPDIMetadata.forEach(item -> outputModule.printMissingReferences(missingRefs));
+        }*/
     }
 
-    public void printParameters(HashMap<String, Parameter> parms) {
+    protected void printParameters(HashMap<String, Parameter> parms) {
 
         System.out.println("| Parameters");
         System.out.println("| ============================================");
@@ -50,7 +61,7 @@ public class ConsoleOutputModule implements OutputModule {
         });
     }
 
-    public void printVariables(List<Variable> vars) {
+    protected void printVariables(List<Variable> vars) {
 
         System.out.println("| Variables");
         System.out.println("| ============================================");
@@ -59,7 +70,7 @@ public class ConsoleOutputModule implements OutputModule {
         });
     }
 
-    public void printConnections(List<Connection> conns) {
+    protected void printConnections(List<Connection> conns) {
         System.out.println("| Connections");
         System.out.println("| ============================================");
         conns.forEach(item -> {
@@ -70,7 +81,7 @@ public class ConsoleOutputModule implements OutputModule {
         });
     }
 
-    public void printMissingReferences(List<MissingReference> missingRefs) {
+    protected void printMissingReferences(List<MissingReference> missingRefs) {
 
         if (!missingRefs.isEmpty()) {
             System.out.println("| Missing References");

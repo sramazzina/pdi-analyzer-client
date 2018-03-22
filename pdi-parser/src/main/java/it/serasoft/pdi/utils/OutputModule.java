@@ -1,13 +1,5 @@
 package it.serasoft.pdi.utils;
 
-import it.serasoft.pdi.model.Connection;
-import it.serasoft.pdi.model.MissingReference;
-import it.serasoft.pdi.model.Parameter;
-import it.serasoft.pdi.model.Variable;
-
-import java.util.HashMap;
-import java.util.List;
-
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
  *
@@ -24,6 +16,11 @@ import java.util.List;
  *  limitations under the License.
  */
 
+import it.serasoft.pdi.model.*;
+
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * Class Name   : OutputModule.java
  * Package Name : it.serasoft.pdi.utils
@@ -34,13 +31,6 @@ import java.util.List;
  */
 public interface OutputModule {
 
-    void printGeneralInfos();
+    void printObjectInfos(ProcessMetadata metadata, List<MissingReference> missingRefs);
 
-    void printParameters(HashMap<String, Parameter> parms);
-
-    void printVariables(List<Variable> vars);
-
-    void printConnections(List<Connection> conns);
-
-    void printMissingReferences(List<MissingReference> missingRefs);
-}
+ }
