@@ -78,21 +78,21 @@ public class JobParser extends it.serasoft.pdi.parser.BasePDIProcessParser {
 
                         if (elementName.equals("entries")) {
                             parseEntries(xmlStreamReader, metadataPath);
-                        } else if (elementName.equals("name") && metadataPath.path().equals("/job/name")) {
-                            collectedProcessMetadata.setName(parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath));
+                        } else if (metadataPath.path().equals("/job/name")) {
+                            collectedProcessMetadata.setName(readElementText(xmlStreamReader, metadataPath));
                             System.out.println("Analyzing job metadata - File: " + collectedProcessMetadata.getName()
                                     + "\n| Filename: " + procFileRef.getName()
                                     + "\n| Path: " + procFileRef.getParent()
                                     + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
                                     + (parentprocFileRef != null ? "\n| Caller Filename: " + parentprocFileRef.getName() : "")
                                     + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
-                        } else if (elementName.equals("description") && metadataPath.path().equals("/job/description")) {
-                            collectedProcessMetadata.setDescription(parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath));
-                        } else if (elementName.equals("extended_description") && metadataPath.path().equals("/job/extended_description")) {
-                            collectedProcessMetadata.setExtendedDescription((parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath)));
-                        } else if (elementName.equals("parameters") && metadataPath.path().equals("/job/parameters")) {
+                        } else if (metadataPath.path().equals("/job/description")) {
+                            collectedProcessMetadata.setDescription(readElementText(xmlStreamReader, metadataPath));
+                        } else if (metadataPath.path().equals("/job/extended_description")) {
+                            collectedProcessMetadata.setExtendedDescription(readElementText(xmlStreamReader, metadataPath));
+                        } else if (metadataPath.path().equals("/job/parameters")) {
                             parseParameters(xmlStreamReader, metadataPath);
-                        } else if (elementName.equals("connection") && metadataPath.path().equals("/job/connection")) {
+                        } else if (metadataPath.path().equals("/job/connection")) {
                             Connection conn = parseConnection(xmlStreamReader, metadataPath);
 
                             addConnectionToCollectedMetadata(conn);

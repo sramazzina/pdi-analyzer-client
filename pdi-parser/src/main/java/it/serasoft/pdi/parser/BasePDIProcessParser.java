@@ -302,38 +302,6 @@ public abstract class BasePDIProcessParser {
 
     }
 
-    protected String parseSimpleTextElementByName(XMLStreamReader xmlStreamReader,
-                                                  String elementName,
-                                                  MetadataPath metadataPath) {
-
-        int eventType;
-        boolean elementAnalyzed = false;
-        String rValue;
-        String currentElementName;
-
-        rValue = readElementText(xmlStreamReader, metadataPath);
-        l.debug(elementName + ": " + rValue);
-
-        try {
-            while (xmlStreamReader.hasNext()) {
-                eventType = xmlStreamReader.next();
-                switch (eventType) {
-                    case XMLStreamReader.END_ELEMENT:
-                        currentElementName = xmlStreamReader.getLocalName();
-                        if (currentElementName.equals(elementName))
-                            elementAnalyzed = true;
-                        break;
-                }
-
-                if (elementAnalyzed) break;
-            }
-        } catch (XMLStreamException e) {
-            e.printStackTrace();
-        }
-
-        return rValue;
-    }
-
     protected String readElementText(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
         StringBuilder content = new StringBuilder();

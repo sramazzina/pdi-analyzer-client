@@ -1,19 +1,19 @@
 package it.serasoft.pdi.parser;
 
 /**
- *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 import it.serasoft.pdi.model.Connection;
@@ -32,7 +32,6 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 
 /**
  * Class Name   : ParseTransformation.java
@@ -61,7 +60,6 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
             MetadataPath metadataPath = new MetadataPath();
 
             XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(new FileInputStream(procFileRef));
-            String prevElementName = "";
             String elementName;
             int eventType;
 
@@ -79,7 +77,6 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         if (metadataPath.path().equals("/transformation/step")) {
                             parseStep(xmlStreamReader, metadataPath);
                         } else if (metadataPath.path().equals("/transformation/info/name")) {
-                            //collectedProcessMetadata.setName(parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath));
                             collectedProcessMetadata.setName(readElementText(xmlStreamReader, metadataPath));
                             System.out.println("Analyzing transformation metadata - File: " + collectedProcessMetadata.getName()
                                     + "\n| Filename: " + procFileRef.getName()
@@ -89,8 +86,8 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                                     + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
                         } else if (metadataPath.path().equals("/transformation/info/description")) {
                             collectedProcessMetadata.setDescription(readElementText(xmlStreamReader, metadataPath));
-                        } else if (metadataPath.path().equals("/transformation/extended_description")) {
-                            collectedProcessMetadata.setExtendedDescription((parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath)));
+                        } else if (metadataPath.path().equals("/transformation/info/extended_description")) {
+                            collectedProcessMetadata.setExtendedDescription(readElementText(xmlStreamReader, metadataPath));
                         } else if (metadataPath.path().equals("/transformation/info/unique_connections")) {
                             collectedProcessMetadata.setTransactional(readElementText(xmlStreamReader, metadataPath));
                         } else if (metadataPath.path().equals("/transformation/info/parameters")) {
@@ -100,13 +97,12 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
 
                             addConnectionToCollectedMetadata(conn);
                         }
-                        prevElementName = elementName;
                         break;
 
                     case XMLStreamConstants.END_ELEMENT:
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.pop();
-                        if(elementName.equals("transformation")) {
+                        if (elementName.equals("transformation")) {
                             // TODO: Manage events on transformation parse finish?
                             outputObjectContent();
                         }
@@ -120,7 +116,7 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
         }
     }
 
-    private void parseStep(XMLStreamReader xmlStreamReader, MetadataPath metadataPath){
+    private void parseStep(XMLStreamReader xmlStreamReader, MetadataPath metadataPath) {
 
         int eventType;
         boolean elementAnalyzed = false;
