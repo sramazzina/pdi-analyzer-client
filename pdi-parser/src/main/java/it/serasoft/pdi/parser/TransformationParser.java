@@ -76,25 +76,26 @@ public class TransformationParser extends it.serasoft.pdi.parser.BasePDIProcessP
                         elementName = xmlStreamReader.getLocalName();
                         metadataPath.push(elementName);
 
-                        if (elementName.equals("step")) {
+                        if (metadataPath.path().equals("/transformation/step")) {
                             parseStep(xmlStreamReader, metadataPath);
-                        } else if (elementName.equals("name") && prevElementName.equals("info")) {
-                            collectedProcessMetadata.setName(parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath));
+                        } else if (metadataPath.path().equals("/transformation/info/name")) {
+                            //collectedProcessMetadata.setName(parseSimpleTextElementByName(xmlStreamReader, "name", metadataPath));
+                            collectedProcessMetadata.setName(readElementText(xmlStreamReader, metadataPath));
                             System.out.println("Analyzing transformation metadata - File: " + collectedProcessMetadata.getName()
                                     + "\n| Filename: " + procFileRef.getName()
                                     + "\n| Path: " + procFileRef.getParent()
                                     + (parentPDIProcName != null ? "\n| Caller: " + parentPDIProcName : "")
                                     + (parentPDIProcFile != null ? "\n| Caller Filename: " + parentPDIProcFile.getName() : "")
                                     + (callerStepName != null ? "\n| Caller Step: " + callerStepName : ""));
-                        } else if (elementName.equals("description") && metadataPath.path().equals("/transformation/info/description")) {
-                            collectedProcessMetadata.setDescription(parseSimpleTextElementByName(xmlStreamReader, "description", metadataPath));
-                        } else if (elementName.equals("extended_description") && metadataPath.path().equals("/transformation/extended_description")) {
+                        } else if (metadataPath.path().equals("/transformation/info/description")) {
+                            collectedProcessMetadata.setDescription(readElementText(xmlStreamReader, metadataPath));
+                        } else if (metadataPath.path().equals("/transformation/extended_description")) {
                             collectedProcessMetadata.setExtendedDescription((parseSimpleTextElementByName(xmlStreamReader, "extended_description", metadataPath)));
-                        } else if (elementName.equals("unique_connections") && metadataPath.path().equals("/transformation/info/unique_connections")) {
-                            collectedProcessMetadata.setTransactional(parseSimpleTextElementByName(xmlStreamReader, "unique_connections", metadataPath));
-                        } else if (elementName.equals("parameters") && metadataPath.path().equals("/transformation/parameters")) {
+                        } else if (metadataPath.path().equals("/transformation/info/unique_connections")) {
+                            collectedProcessMetadata.setTransactional(readElementText(xmlStreamReader, metadataPath));
+                        } else if (metadataPath.path().equals("/transformation/info/parameters")) {
                             parseParameters(xmlStreamReader, metadataPath);
-                        } else if (elementName.equals("connection") && metadataPath.path().equals("/transformation/connection")) {
+                        } else if (metadataPath.path().equals("/transformation/connection")) {
                             Connection conn = parseConnection(xmlStreamReader, metadataPath);
 
                             addConnectionToCollectedMetadata(conn);

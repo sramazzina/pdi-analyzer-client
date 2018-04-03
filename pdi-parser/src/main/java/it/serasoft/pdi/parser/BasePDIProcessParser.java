@@ -80,7 +80,7 @@ public abstract class BasePDIProcessParser {
         if (this.linkedPDIMetadata != null && !this.linkedPDIMetadata.isEmpty()) {
             this.linkedPDIMetadata.forEach(item -> missingRefs.addAll(item.getMissingFilesReferencesList()));
         } else {
-            if (!collectedMissingReferences.isEmpty()) {
+            if (collectedMissingReferences != null && !collectedMissingReferences.isEmpty()) {
                 collectedMissingReferences.forEach(item -> missingRefs.add(item));
             }
         }
