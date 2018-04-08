@@ -32,6 +32,7 @@ public class ProcessItem {
     private String itemClass;
     private String name;
     private String description;
+    private ProcessMetadata linkedProcess;
 
     public ProcessItem(ProcessItemTypeEnum type) {
         this.type = type;
@@ -61,5 +62,13 @@ public class ProcessItem {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ProcessMetadata getLinkedProcess() {
+        return linkedProcess;
+    }
+
+    public void setLinkedProcess(ProcessMetadata linkedProcess) {
+        this.linkedProcess = linkedProcess;
     }
 }

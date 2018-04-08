@@ -172,6 +172,7 @@ public class PDIAnalyzer {
             if (m.getMissingRefs() != null && m.getMissingRefs().isEmpty()) {
                 l.info ("We have missing refs!");
             }
+
         } else if (name.endsWith(EXT_PDI_TRANSFORMATION)) {
             TransformationParser parseTransf = new TransformationParser(f, 0, followLinks);
             m = parseTransf.parse();

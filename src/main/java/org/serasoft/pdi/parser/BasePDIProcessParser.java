@@ -39,11 +39,11 @@ import java.util.Map;
  */
 public abstract class BasePDIProcessParser {
 
+    private Logger l = LoggerFactory.getLogger(JobParser.class);
+
     protected File procFileRef;
     protected int depth;
     protected boolean followSymlinks;
-    protected List<BasePDIProcessParser> linkedPDIMetadata;
-    private Logger l = LoggerFactory.getLogger(JobParser.class);
 
     public BasePDIProcessParser(File procFileRef, int depth, boolean followSymlinks) {
         init(procFileRef, depth, followSymlinks);

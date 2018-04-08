@@ -292,27 +292,21 @@ public class JobParser extends org.serasoft.pdi.parser.BasePDIProcessParser {
                             entryDescription = readElementText(xmlStreamReader, metadataPath);
                         } else if (elementName.equals("filename")) {
                             procFileRefname = readElementText(xmlStreamReader, metadataPath);
+
                             if (procFileRefname != null) {
+
                                 procFileRefname = ResolvePDIInternalVariables.resolve(procFileRefname, procFileRef.getParent());
                                 l.debug("Filename: " + procFileRefname);
+                                ProcessMetadata pm = null;
 
                                 if (followSymlinks && itemClass.equals("JOB")) {
                                     JobParser parseJob = new JobParser(new File(procFileRefname), depth + 1, followSymlinks);
-                                    parseJob.parse(procName, procFileRef, entryName);
-                                    if (linkedPDIMetadata == null) {
-                                        linkedPDIMetadata = new ArrayList<>();
-                                    }
-                                    linkedPDIMetadata.add(parseJob);
-                                } else {
-                                    if (followSymlinks && itemClass.equals("TRANS")) {
-                                        TransformationParser parseTrans = new TransformationParser(new File(procFileRefname), depth + 1, followSymlinks);
-                                        parseTrans.parse(procName, procFileRef, entryName);
-                                        if (linkedPDIMetadata == null) {
-                                            linkedPDIMetadata = new ArrayList<>();
-                                        }
-                                        linkedPDIMetadata.add(parseTrans);
-                                    }
+                                    pm = parseJob.parse(procName, procFileRef, entryName);
+                                } else if (followSymlinks && itemClass.equals("TRANS")) {
+                                    TransformationParser parseTrans = new TransformationParser(new File(procFileRefname), depth + 1, followSymlinks);
+                                    pm = parseTrans.parse(procName, procFileRef, entryName);
                                 }
+                                item.setLinkedProcess(pm);
                             }
                         }
                         break;
