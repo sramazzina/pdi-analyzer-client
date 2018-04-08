@@ -17,7 +17,7 @@ package serasoft.pdi.util;
  */
 
 import org.junit.Test;
-import org.serasoft.pdi.utils.MetadataPath;
+import org.serasoft.pdi.parser.utils.MetadataPath;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
