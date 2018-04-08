@@ -1,3 +1,4 @@
+package org.serasoft.pdi.model;
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
  *
@@ -14,13 +15,27 @@
  *  limitations under the License.
  */
 
+/**
+ * Class Name   : ProcessVariableBase.java
+ * Package Name : org.serasoft.pdi.model
+ * <p>
+ * Created By   : Sergio Ramazzina - sergio.ramazzina@serasoft.it
+ * Creation Date: 01/12/16
+ * Description  :
+ */
+public class BaseVariable {
 
-/*
-// To declare projects as part of a multi-project build use the 'include' method
-include 'shared'
-include 'api'
-include 'services:webservice'
-*/
+    private String name;
 
-include 'parser', 'cmdline'
-rootProject.name = 'pdi-analyzer'
+    public BaseVariable(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}

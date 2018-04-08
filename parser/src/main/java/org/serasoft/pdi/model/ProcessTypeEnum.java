@@ -1,3 +1,5 @@
+package org.serasoft.pdi.model;
+
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
  *
@@ -14,13 +16,27 @@
  *  limitations under the License.
  */
 
+/**
+ * Class Name   : ProcessTypeEnum.java
+ * Package Name : org.serasoft.pdi.model
+ * <p>
+ * Created By   : Sergio Ramazzina - sergio.ramazzina@serasoft.it
+ * Creation Date: 09/01/17
+ * Description  :
+ */
 
-/*
-// To declare projects as part of a multi-project build use the 'include' method
-include 'shared'
-include 'api'
-include 'services:webservice'
-*/
+public enum ProcessTypeEnum {
 
-include 'parser', 'cmdline'
-rootProject.name = 'pdi-analyzer'
+    JOB("Job"),
+    TRANSFORMATION("Transformation");
+
+    private String value;
+    ProcessTypeEnum(String value) {
+        this.value = value;
+    }
+    public String getValue() {
+        return value;
+    }
+
+
+}

@@ -1,3 +1,5 @@
+package org.serasoft.pdi.utils;
+
 /**
  *  Copyright 2016 - Sergio Ramazzina : sergio.ramazzina@serasoft.it
  *
@@ -15,12 +17,20 @@
  */
 
 
-/*
-// To declare projects as part of a multi-project build use the 'include' method
-include 'shared'
-include 'api'
-include 'services:webservice'
-*/
+/**
+ * Class Name   : ReslvePDIInternalVariable.java
+ * Package Name : org.serasoft.pdi.utils
+ * <p>
+ * Created By   : Sergio Ramazzina - sergio.ramazzina@serasoft.it
+ * Creation Date: 24/11/16
+ * Description  :
+ */
 
-include 'parser', 'cmdline'
-rootProject.name = 'pdi-analyzer'
+public class ResolvePDIInternalVariables {
+
+    public static String resolve(String pdiContentEntry, String value) {
+        return pdiContentEntry.replace("${Internal.Job.Filename.Directory}", value)
+                .replace("${Internal.Transformation.Filename.Directory}", value)
+                .replace("${Internal.Entry.Current.Directory}", value);
+    }
+}
