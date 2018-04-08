@@ -22,4 +22,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'pdi-analyzer'
+rootProject.name = 'pdi-analyzer-client'
